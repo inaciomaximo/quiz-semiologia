@@ -61,13 +61,6 @@
             margin-right: 10px;
             transition: background 0.3s;
         }
-        .btn-show-answer {
-            background: #3498db;
-            color: white;
-        }
-        .btn-show-answer:hover {
-            background: #2980b9;
-        }
         .btn-next {
             background: #2ecc71;
             color: white;
@@ -81,14 +74,6 @@
         }
         .btn-finish:hover {
             background: #c0392b;
-        }
-        .answer {
-            background: #f8f9fa;
-            padding: 15px;
-            border-left: 4px solid #3498db;
-            margin: 15px 0;
-            display: none;
-            white-space: pre-line;
         }
         .review-page {
             display: none;
@@ -107,6 +92,27 @@
         .review-answer {
             color: #555;
             white-space: pre-line;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-answer {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .correct-answer {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        .handwriting-review {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            text-align: center;
+        }
+        .handwriting-review img {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
         }
         .navigation {
             display: flex;
@@ -131,6 +137,111 @@
                 flex-direction: column;
             }
         }
+        
+        /* Estilos para a área de escrita */
+        .input-method-selector {
+            display: flex;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .input-method-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background-color: #eee;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .input-method-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        /* Área de escrita manual */
+        .handwriting-container {
+            width: 100%;
+            margin: 15px 0;
+            position: relative;
+        }
+        #handwriting-canvas {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            touch-action: none;
+            background-image: linear-gradient(to bottom, #f5f5f5 1px, transparent 1px);
+            background-size: 100% 24px;
+        }
+        .handwriting-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .pen-colors {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .pen-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .pen-color.active {
+            border-color: #333;
+        }
+        .pen-color.black {
+            background-color: #000000;
+        }
+        .pen-color.gray {
+            background-color: #808080;
+        }
+        .pen-color.blue {
+            background-color: #00aaff;
+        }
+        .pen-color.eraser {
+            background-color: white;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        .pen-color.eraser::after {
+            content: "🧽";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        .tool-separator {
+            width: 1px;
+            background-color: #ddd;
+            margin: 0 5px;
+        }
+        .tool-size {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tool-size-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .tool-size-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -142,13 +253,14 @@
         </div>
 
         <div id="review-screen" class="review-page">
-            <h2>Revisão das Respostas</h2>
+            <h2>Comparação das Respostas</h2>
             <div id="review-content">
                 <!-- Review content will be dynamically inserted here -->
             </div>
             <div class="navigation">
-                <button id="prev-review-btn" class="btn btn-show-answer">Anterior</button>
-                <button id="next-review-btn" class="btn btn-next">Próximo</button>
+                <button id="prev-review-btn" class="btn btn-next" onclick="prevReviewPage()">Anterior</button>
+                <button id="next-review-btn" class="btn btn-next" onclick="nextReviewPage()">Próximo</button>
+                <button id="return-btn" class="btn btn-finish" onclick="returnToQuiz()">Voltar para Questões</button>
             </div>
         </div>
         
@@ -694,10 +806,25 @@ b) Hipermenorragia`,
         // ========== VARIÁVEIS DO SISTEMA ==========
         let currentQuestion = 0;
         let userAnswers = Array(questions.length).fill("");
+        let userHandwritings = Array(questions.length).fill("");
         let reviewPage = 0;
+        let currentInputMethod = 'text';
+        let canvas, ctx;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentColor = '#000000';
+        let currentTool = 'pen';
+        let currentLineWidth = 1; // Tamanho 1 selecionado por padrão
+        let eraserSize = 10;
+        let answeredQuestions = 0;
 
         // ========== FUNÇÕES PRINCIPAIS ==========
         function initQuiz() {
+            if (questions.length === 0) {
+                alert("Adicione pelo menos uma questão ao sistema.");
+                return;
+            }
             renderQuestion();
         }
 
@@ -705,27 +832,301 @@ b) Hipermenorragia`,
             const questionScreen = document.getElementById("question-screen");
             questionScreen.innerHTML = "";
 
+            if (currentQuestion < 0 || currentQuestion >= questions.length) {
+                questionScreen.innerHTML = `<p>Questão não encontrada.</p>`;
+                return;
+            }
+
             const questionCard = document.createElement("div");
             questionCard.className = "question-card active";
 
             questionCard.innerHTML = `
                 <div class="question-text">${questions[currentQuestion].text}</div>
-                <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui...">${userAnswers[currentQuestion]}</textarea>
-                <button class="btn btn-show-answer" onclick="showAnswer(${currentQuestion})">Ver Resposta</button>
-                <div class="answer" id="correct-answer-${currentQuestion}">
-                    <strong>Resposta Correta:</strong><br>${questions[currentQuestion].answer}
+                
+                <div class="input-method-selector">
+                    <div class="input-method-btn ${currentInputMethod === 'text' ? 'active' : ''}" onclick="setInputMethod('text')">Digitar</div>
+                    <div class="input-method-btn ${currentInputMethod === 'handwriting' ? 'active' : ''}" onclick="setInputMethod('handwriting')">Escrever</div>
                 </div>
+                
+                <div id="text-input" style="${currentInputMethod === 'text' ? '' : 'display:none;'}">
+                    <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui...">${userAnswers[currentQuestion]}</textarea>
+                </div>
+                
+                <div id="handwriting-input" style="${currentInputMethod === 'handwriting' ? '' : 'display:none;'}">
+                    <div class="handwriting-container">
+                        <canvas id="handwriting-canvas"></canvas>
+                    </div>
+                    <div class="handwriting-tools">
+                        <div class="pen-colors">
+                            <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
+                            <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
+                            <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
+                            <div class="tool-separator"></div>
+                            <div class="pen-color eraser" onclick="setEraser(this)"></div>
+                        </div>
+                        <div class="tool-size">
+                            <div class="tool-size-btn ${currentLineWidth === 1 ? 'active' : ''}" onclick="setToolSize(1)">1</div>
+                            <div class="tool-size-btn ${currentLineWidth === 3 ? 'active' : ''}" onclick="setToolSize(3)">3</div>
+                            <div class="tool-size-btn ${currentLineWidth === 5 ? 'active' : ''}" onclick="setToolSize(5)">5</div>
+                        </div>
+                        <div style="flex-grow: 1;"></div>
+                        <button class="btn btn-next" onclick="clearCanvas()">Limpar Tudo</button>
+                    </div>
+                </div>
+                
                 <div class="navigation">
-                    ${currentQuestion > 0 ? `<button class="btn btn-show-answer" onclick="prevQuestion()">Voltar</button>` : ''}
-                    ${currentQuestion < questions.length - 1 ? `<button class="btn btn-next" onclick="nextQuestion()">Próxima Questão</button>` : `<button class="btn btn-finish" onclick="finishQuiz()">Finalizar Prova</button>`}
+                    ${currentQuestion > 0 ? `<button class="btn btn-next" onclick="prevQuestion()">Voltar</button>` : ''}
+                    ${currentQuestion < questions.length - 1 ? `<button class="btn btn-next" onclick="nextQuestion()">${answeredQuestions % 3 === 2 ? 'Ver Resultados' : 'Próxima Questão'}</button>` : `<button class="btn btn-finish" onclick="finishQuiz()">Finalizar Prova</button>`}
                 </div>
             `;
 
             questionScreen.appendChild(questionCard);
+            
+            if (currentInputMethod === 'handwriting' && userHandwritings[currentQuestion]) {
+                loadHandwriting();
+            } else if (currentInputMethod === 'handwriting') {
+                setupCanvas();
+            }
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('handwriting-canvas');
+            if (!canvas) return;
+            
+            ctx = canvas.getContext('2d');
+            
+            const scale = window.devicePixelRatio || 1;
+            canvas.width = canvas.offsetWidth * scale;
+            canvas.height = canvas.offsetHeight * scale;
+            ctx.scale(scale, scale);
+            
+            ctx.lineWidth = currentLineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = currentColor;
+            ctx.shadowBlur = 2;
+            ctx.shadowColor = currentColor;
+            
+            drawGuidelines();
+            
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function loadHandwriting() {
+            if (!userHandwritings[currentQuestion]) return;
+            
+            const img = new Image();
+            img.onload = function() {
+                setupCanvas();
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = userHandwritings[currentQuestion];
+        }
+
+        function drawGuidelines() {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            const lineHeight = 24;
+            const startY = lineHeight;
+            
+            for (let y = startY; y < canvas.height; y += lineHeight) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPosition(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, eraserSize, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.shadowColor = currentColor;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(lastX, lastY);
+                ctx.stroke();
+            }
+            
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const pos = getPosition(e);
+            
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.shadowColor = currentColor;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+            
+            lastX = pos.x;
+            lastY = pos.y;
+            
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function getPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            
+            if (e.touches) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+            
+            const scale = window.devicePixelRatio || 1;
+            return {
+                x: x * (canvas.width / rect.width / scale),
+                y: y * (canvas.height / rect.height / scale)
+            };
+        }
+
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function handleTouchMove(e) {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function handleTouchEnd() {
+            const mouseEvent = new MouseEvent('mouseup');
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function clearCanvas() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGuidelines();
+        }
+
+        function setPenColor(color, element) {
+            currentColor = color;
+            currentTool = 'pen';
+            ctx.strokeStyle = color;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.shadowColor = color;
+            
+            document.querySelectorAll('.pen-color').forEach(el => {
+                el.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        function setEraser(element) {
+            currentTool = 'eraser';
+            
+            document.querySelectorAll('.pen-color').forEach(el => {
+                el.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        function setToolSize(size) {
+            if (currentTool === 'pen') {
+                currentLineWidth = size;
+                ctx.lineWidth = currentLineWidth;
+                
+                // Atualizar botões ativos
+                document.querySelectorAll('.tool-size-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+        }
+
+        function saveCurrentAnswer() {
+            if (currentInputMethod === 'text') {
+                const textarea = document.getElementById(`answer-${currentQuestion}`);
+                if (textarea) {
+                    userAnswers[currentQuestion] = textarea.value;
+                }
+            } else if (currentInputMethod === 'handwriting') {
+                const dataURL = canvas.toDataURL('image/png');
+                userHandwritings[currentQuestion] = dataURL;
+                userAnswers[currentQuestion] = "Resposta escrita à mão";
+            }
+        }
+
+        function setInputMethod(method) {
+            saveCurrentAnswer();
+            currentInputMethod = method;
+            document.getElementById('text-input').style.display = method === 'text' ? 'block' : 'none';
+            document.getElementById('handwriting-input').style.display = method === 'handwriting' ? 'block' : 'none';
+            
+            const buttons = document.querySelectorAll('.input-method-btn');
+            buttons.forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === method);
+            });
+            
+            if (method === 'handwriting') {
+                setupCanvas();
+            }
         }
 
         function nextQuestion() {
-            saveAnswer();
+            saveCurrentAnswer();
+            answeredQuestions++;
+            
+            // Verifica se completou um bloco de 3 questões
+            if (answeredQuestions % 3 === 0) {
+                showReview();
+                return;
+            }
+            
             if (currentQuestion < questions.length - 1) {
                 currentQuestion++;
                 renderQuestion();
@@ -733,76 +1134,99 @@ b) Hipermenorragia`,
         }
 
         function prevQuestion() {
-            saveAnswer();
+            saveCurrentAnswer();
             if (currentQuestion > 0) {
                 currentQuestion--;
                 renderQuestion();
             }
         }
 
-        function saveAnswer() {
-            const textarea = document.getElementById(`answer-${currentQuestion}`);
-            if (textarea) {
-                userAnswers[currentQuestion] = textarea.value;
-            }
-        }
-
-        function showAnswer(questionIndex) {
-            const answerDiv = document.getElementById(`correct-answer-${questionIndex}`);
-            if (answerDiv) {
-                answerDiv.style.display = answerDiv.style.display === "block" ? "none" : "block";
-            }
-        }
-
-        function finishQuiz() {
-            saveAnswer();
+        function showReview() {
             document.getElementById("question-screen").style.display = "none";
             document.getElementById("review-screen").style.display = "block";
             renderReview();
+        }
+
+        function finishQuiz() {
+            saveCurrentAnswer();
+            showReview();
         }
 
         function renderReview() {
             const reviewContent = document.getElementById("review-content");
             reviewContent.innerHTML = "";
 
-            const startIdx = reviewPage * 3;
+            // Determina quais questões mostrar (último bloco de 3)
+            const startIdx = Math.floor(currentQuestion / 3) * 3;
             const endIdx = Math.min(startIdx + 3, questions.length);
+            
+            // Título do bloco
+            const reviewTitle = document.createElement("h3");
+            reviewTitle.textContent = `Revisão das Questões ${startIdx + 1} a ${endIdx}`;
+            reviewContent.appendChild(reviewTitle);
 
             for (let i = startIdx; i < endIdx; i++) {
                 const reviewItem = document.createElement("div");
                 reviewItem.className = "review-item";
+                
+                let answerContent = "";
+                if (userHandwritings[i]) {
+                    answerContent = `
+                        <div class="review-answer handwriting-review">
+                            <strong>Sua Resposta Escrita:</strong>
+                            <img src="${userHandwritings[i]}" alt="Resposta escrita à mão">
+                        </div>
+                    `;
+                } else if (userAnswers[i]) {
+                    answerContent = `
+                        <div class="review-answer user-answer">
+                            <strong>Sua Resposta:</strong><br>
+                            ${userAnswers[i]}
+                        </div>
+                    `;
+                } else {
+                    answerContent = `
+                        <div class="review-answer user-answer">
+                            <strong>Sua Resposta:</strong><br>
+                            (Não respondida)
+                        </div>
+                    `;
+                }
+                
                 reviewItem.innerHTML = `
                     <div class="review-question"><strong>Questão ${i + 1}:</strong> ${questions[i].text}</div>
-                    <div class="review-answer"><strong>Sua Resposta:</strong> ${userAnswers[i] || "(Não respondida)"}</div>
-                    <div class="review-answer"><strong>Resposta Correta:</strong> ${questions[i].answer}</div>
+                    ${answerContent}
+                    <div class="review-answer correct-answer">
+                        <strong>Resposta Correta:</strong><br>
+                        ${questions[i].answer}
+                    </div>
                 `;
                 reviewContent.appendChild(reviewItem);
             }
 
-            document.getElementById("prev-review-btn").style.display = reviewPage === 0 ? "none" : "block";
-            document.getElementById("next-review-btn").style.display = endIdx >= questions.length ? "none" : "block";
+            // Esconde botões de navegação se não houver mais páginas
+            document.getElementById("prev-review-btn").style.display = "none";
+            document.getElementById("next-review-btn").style.display = "none";
+            
+            // Mostra botão para continuar ou finalizar
+            const returnBtn = document.getElementById("return-btn");
+            if (endIdx >= questions.length) {
+                returnBtn.textContent = "Finalizar Prova";
+            } else {
+                returnBtn.textContent = "Continuar para Próximas Questões";
+            }
         }
 
-        // ========== EVENT LISTENERS ==========
-        document.getElementById("prev-review-btn").addEventListener("click", () => {
-            if (reviewPage > 0) {
-                reviewPage--;
-                renderReview();
+        function returnToQuiz() {
+            document.getElementById("review-screen").style.display = "none";
+            document.getElementById("question-screen").style.display = "block";
+            
+            // Avança para a próxima questão após a revisão
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
             }
-        });
-
-        document.getElementById("next-review-btn").addEventListener("click", () => {
-            if ((reviewPage + 1) * 3 < questions.length) {
-                reviewPage++;
-                renderReview();
-            }
-        });
-
-        // ========== TORNAR FUNÇÕES GLOBAIS ==========
-        window.nextQuestion = nextQuestion;
-        window.prevQuestion = prevQuestion;
-        window.showAnswer = showAnswer;
-        window.finishQuiz = finishQuiz;
+        }
 
         // ========== INICIAR PROVA ==========
         window.onload = initQuiz;
