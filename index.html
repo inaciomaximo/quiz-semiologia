@@ -172,7 +172,7 @@
             border-radius: 5px;
             background-color: white;
             touch-action: none;
-            background-image: linear-gradient(to bottom, #f5f5f5 1px, transparent 1px);
+            background-image: linear-gradient(to bottom, #f5f5f5 0.5px, transparent 0.5px);
             background-size: 100% 24px;
         }
         .handwriting-tools {
@@ -805,22 +805,26 @@ b) Hipermenorragia`,
 
         // ========== VARIÁVEIS DO SISTEMA ==========
         let currentQuestion = 0;
-        let userAnswers = Array(questions.length).fill("");
-        let userHandwritings = Array(questions.length).fill("");
+        let userAnswers = [];
+        let userHandwritings = [];
         let reviewPage = 0;
-        let currentInputMethod = 'text';
+        let currentInputMethod = 'handwriting'; // Modo escrita pré-selecionado
         let canvas, ctx;
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
         let currentColor = '#000000';
         let currentTool = 'pen';
-        let currentLineWidth = 1; // Tamanho 1 selecionado por padrão
+        let currentLineWidth = 1;
         let eraserSize = 10;
         let answeredQuestions = 0;
 
         // ========== FUNÇÕES PRINCIPAIS ==========
         function initQuiz() {
+            // Inicializa arrays com tamanho correto
+            userAnswers = new Array(questions.length).fill("");
+            userHandwritings = new Array(questions.length).fill("");
+            
             if (questions.length === 0) {
                 alert("Adicione pelo menos uma questão ao sistema.");
                 return;
@@ -866,8 +870,8 @@ b) Hipermenorragia`,
                         </div>
                         <div class="tool-size">
                             <div class="tool-size-btn ${currentLineWidth === 1 ? 'active' : ''}" onclick="setToolSize(1)">1</div>
+                            <div class="tool-size-btn ${currentLineWidth === 2 ? 'active' : ''}" onclick="setToolSize(2)">2</div>
                             <div class="tool-size-btn ${currentLineWidth === 3 ? 'active' : ''}" onclick="setToolSize(3)">3</div>
-                            <div class="tool-size-btn ${currentLineWidth === 5 ? 'active' : ''}" onclick="setToolSize(5)">5</div>
                         </div>
                         <div style="flex-grow: 1;"></div>
                         <button class="btn btn-next" onclick="clearCanvas()">Limpar Tudo</button>
@@ -904,7 +908,7 @@ b) Hipermenorragia`,
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.strokeStyle = currentColor;
-            ctx.shadowBlur = 2;
+            ctx.shadowBlur = 1;
             ctx.shadowColor = currentColor;
             
             drawGuidelines();
@@ -932,8 +936,8 @@ b) Hipermenorragia`,
 
         function drawGuidelines() {
             ctx.save();
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.lineWidth = 0.5;
             
             const lineHeight = 24;
             const startY = lineHeight;
@@ -1080,7 +1084,6 @@ b) Hipermenorragia`,
                 currentLineWidth = size;
                 ctx.lineWidth = currentLineWidth;
                 
-                // Atualizar botões ativos
                 document.querySelectorAll('.tool-size-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
@@ -1121,7 +1124,6 @@ b) Hipermenorragia`,
             saveCurrentAnswer();
             answeredQuestions++;
             
-            // Verifica se completou um bloco de 3 questões
             if (answeredQuestions % 3 === 0) {
                 showReview();
                 return;
@@ -1156,11 +1158,9 @@ b) Hipermenorragia`,
             const reviewContent = document.getElementById("review-content");
             reviewContent.innerHTML = "";
 
-            // Determina quais questões mostrar (último bloco de 3)
             const startIdx = Math.floor(currentQuestion / 3) * 3;
             const endIdx = Math.min(startIdx + 3, questions.length);
             
-            // Título do bloco
             const reviewTitle = document.createElement("h3");
             reviewTitle.textContent = `Revisão das Questões ${startIdx + 1} a ${endIdx}`;
             reviewContent.appendChild(reviewTitle);
@@ -1204,11 +1204,9 @@ b) Hipermenorragia`,
                 reviewContent.appendChild(reviewItem);
             }
 
-            // Esconde botões de navegação se não houver mais páginas
             document.getElementById("prev-review-btn").style.display = "none";
             document.getElementById("next-review-btn").style.display = "none";
             
-            // Mostra botão para continuar ou finalizar
             const returnBtn = document.getElementById("return-btn");
             if (endIdx >= questions.length) {
                 returnBtn.textContent = "Finalizar Prova";
@@ -1221,7 +1219,6 @@ b) Hipermenorragia`,
             document.getElementById("review-screen").style.display = "none";
             document.getElementById("question-screen").style.display = "block";
             
-            // Avança para a próxima questão após a revisão
             if (currentQuestion < questions.length - 1) {
                 currentQuestion++;
                 renderQuestion();
