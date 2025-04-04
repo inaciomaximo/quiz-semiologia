@@ -153,7 +153,7 @@
         </div>
         
         <footer>
-            Sistema de Prova Dissertativa - Semiomonsters © 2025 
+            Sistema de Prova Dissertativa - Semiomonsters © 2025
         </footer>
     </div>
 
@@ -706,12 +706,12 @@ b) Hipermenorragia`,
             questionScreen.innerHTML = "";
 
             const questionCard = document.createElement("div");
-            questionCard.className = `question-card ${currentQuestion === 0 ? 'active' : ''}`;
+            questionCard.className = "question-card active";
 
             questionCard.innerHTML = `
                 <div class="question-text">${questions[currentQuestion].text}</div>
                 <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui...">${userAnswers[currentQuestion]}</textarea>
-                <button class="btn btn-show-answer" onclick="showAnswer()">Ver Resposta</button>
+                <button class="btn btn-show-answer" onclick="showAnswer(${currentQuestion})">Ver Resposta</button>
                 <div class="answer" id="correct-answer-${currentQuestion}">
                     <strong>Resposta Correta:</strong><br>${questions[currentQuestion].answer}
                 </div>
@@ -747,9 +747,11 @@ b) Hipermenorragia`,
             }
         }
 
-        function showAnswer() {
-            const answerDiv = document.getElementById(`correct-answer-${currentQuestion}`);
-            answerDiv.style.display = "block";
+        function showAnswer(questionIndex) {
+            const answerDiv = document.getElementById(`correct-answer-${questionIndex}`);
+            if (answerDiv) {
+                answerDiv.style.display = answerDiv.style.display === "block" ? "none" : "block";
+            }
         }
 
         function finishQuiz() {
@@ -795,6 +797,12 @@ b) Hipermenorragia`,
                 renderReview();
             }
         });
+
+        // ========== TORNAR FUNÇÕES GLOBAIS ==========
+        window.nextQuestion = nextQuestion;
+        window.prevQuestion = prevQuestion;
+        window.showAnswer = showAnswer;
+        window.finishQuiz = finishQuiz;
 
         // ========== INICIAR PROVA ==========
         window.onload = initQuiz;
