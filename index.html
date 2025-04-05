@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prova Dissertativa</title>
+    <title>Prova Dissertativa de Semiologia</title>
     <style>
         * {
             margin: 0;
@@ -242,10 +242,18 @@
             background-color: #3498db;
             color: white;
         }
+        
+        /* Estilo para a mensagem de acesso negado */
+        .access-denied {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="main-content" style="display: none;">
         <h1>Prova Dissertativa de Semiologia</h1>
         
         <div id="question-screen">
@@ -268,8 +276,53 @@
             Sistema de Prova Dissertativa - Semiomonsters © 2025
         </footer>
     </div>
+    
+    <div id="access-denied" class="access-denied" style="display: none;">
+        <h2>AGUARDE</h2>
+        <p>Você será redirecionado em breve...</p>
+    </div>
 
     <script>
+        // ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
+        // Adicione os IPs autorizados neste array
+        const authorizedIPs = [
+            "177.141.171.90", 
+        ];
+        
+        // ========== VERIFICAÇÃO DE IP ==========
+        function checkIPAuthorization() {
+            // Obter o IP do cliente (método simplificado)
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const clientIP = data.ip;
+                    
+                    // Verificar se o IP está autorizado
+                    if (authorizedIPs.includes(clientIP)) {
+                        // IP autorizado - mostrar conteúdo
+                        document.getElementById('main-content').style.display = 'block';
+                        initQuiz();
+                    } else {
+                        // IP não autorizado - mostrar mensagem e redirecionar
+                        document.getElementById('access-denied').style.display = 'block';
+                        
+                        // Redirecionar após 3 segundos
+                        setTimeout(() => {
+                            window.location.href = "https://www.youtube.com/shorts/R4A4zJxWflE";
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao verificar IP:", error);
+                    // Em caso de erro na verificação, você pode decidir bloquear ou permitir
+                    // Por padrão, vamos bloquear por segurança
+                    document.getElementById('access-denied').style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = "https://www.youtube.com/shorts/8bCZTUWLLdU";
+                    }, 3000);
+                });
+        }
+
         // ========== TODAS AS 51 QUESTÕES COMPLETAS ==========
         const questions = [
             // QUESTÃO 1
@@ -1225,8 +1278,8 @@ b) Hipermenorragia`,
             }
         }
 
-        // ========== INICIAR PROVA ==========
-        window.onload = initQuiz;
+        // ========== INICIAR VERIFICAÇÃO DE IP ==========
+        window.onload = checkIPAuthorization;
     </script>
 </body>
 </html>
