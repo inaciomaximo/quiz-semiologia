@@ -164,6 +164,7 @@
             width: 100%;
             margin: 15px 0;
             position: relative;
+            touch-action: pan-y; /* Permite rolagem vertical com o dedo */
         }
         #handwriting-canvas {
             width: 100%;
@@ -171,7 +172,7 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: white;
-            touch-action: none;
+            touch-action: none; /* Desativa gestos de toque no canvas */
             background-image: linear-gradient(to bottom, #f5f5f5 0.5px, transparent 0.5px);
             background-size: 100% 24px;
         }
@@ -250,6 +251,21 @@
             color: #e74c3c;
             font-size: 18px;
         }
+        
+        /* Mensagem para caneta */
+        .stylus-message {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+            display: none;
+        }
+        
+        @media (hover: none) and (pointer: coarse) {
+            .stylus-message {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
@@ -271,16 +287,6 @@
                 <button id="return-btn" class="btn btn-finish" onclick="returnToQuiz()">Voltar para Questões</button>
             </div>
         </div>
-        
-        <footer>
-            Sistema de Prova Dissertativa - Semiomonsters © 2025
-        </footer>
-    </div>
-    
-    <div id="access-denied" class="access-denied" style="display: none;">
-        <h2>AGUARDE</h2>
-        <p>Você será redirecionado em breve...</p>
-    </div>
 
     <script>
         // ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
@@ -884,7 +890,6 @@ b) Hipermenorragia`,
 
         // ========== FUNÇÕES PRINCIPAIS ==========
         function initQuiz() {
-            // Inicializa arrays com tamanho correto
             userAnswers = new Array(questions.length).fill("");
             userHandwritings = new Array(questions.length).fill("");
             
@@ -920,6 +925,7 @@ b) Hipermenorragia`,
                 </div>
                 
                 <div id="handwriting-input" style="${currentInputMethod === 'handwriting' ? '' : 'display:none;'}">
+                    <div class="stylus-message">Use uma caneta/stylus para escrever. Dedos podem ser usados para rolar a página.</div>
                     <div class="handwriting-container">
                         <canvas id="handwriting-canvas"></canvas>
                     </div>
@@ -976,47 +982,42 @@ b) Hipermenorragia`,
             
             drawGuidelines();
             
+            // Eventos de mouse (para desktop)
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
             
+            // Eventos de toque (para tablets)
             canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
             canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleTouchEnd);
         }
 
-        function loadHandwriting() {
-            if (!userHandwritings[currentQuestion]) return;
-            
-            const img = new Image();
-            img.onload = function() {
-                setupCanvas();
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            };
-            img.src = userHandwritings[currentQuestion];
-        }
-
-        function drawGuidelines() {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-            ctx.lineWidth = 0.5;
-            
-            const lineHeight = 24;
-            const startY = lineHeight;
-            
-            for (let y = startY; y < canvas.height; y += lineHeight) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
+        // Função para detectar se é uma caneta/stylus
+        function isStylusEvent(event) {
+            // Verifica se é um evento de toque e se tem a propriedade touchType (suportado em alguns navegadores)
+            if (event.touches && event.touches[0] && event.touches[0].touchType) {
+                return event.touches[0].touchType === 'stylus';
             }
             
-            ctx.restore();
+            // Verifica a pressão (canetas geralmente reportam pressão)
+            if (event.pointerType === 'pen' || (event.touches && event.touches[0] && event.touches[0].force > 0)) {
+                return true;
+            }
+            
+            // Fallback: se não for um evento de toque, assume que é mouse (permite desenhar em desktop)
+            return !event.touches;
         }
 
         function startDrawing(e) {
+            // Verifica se é uma caneta/stylus ou mouse (não dedo)
+            if (e.touches && !isStylusEvent(e)) {
+                return; // Ignora toques com dedos
+            }
+            
             isDrawing = true;
+            isStylus = e.touches ? true : false;
             const pos = getPosition(e);
             lastX = pos.x;
             lastY = pos.y;
@@ -1042,6 +1043,11 @@ b) Hipermenorragia`,
 
         function draw(e) {
             if (!isDrawing) return;
+            
+            // Verifica se é uma caneta/stylus ou mouse (não dedo)
+            if (e.touches && !isStylus) {
+                return; // Ignora toques com dedos
+            }
             
             const pos = getPosition(e);
             
@@ -1092,26 +1098,35 @@ b) Hipermenorragia`,
         }
 
         function handleTouchStart(e) {
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousedown', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            canvas.dispatchEvent(mouseEvent);
+            if (isStylusEvent(e)) {
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: e.touches[0].clientX,
+                    clientY: e.touches[0].clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+                e.preventDefault(); // Previne rolagem apenas para caneta
+            }
+            // Toques com dedos não fazem nada (permitem rolagem)
         }
 
         function handleTouchMove(e) {
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousemove', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            canvas.dispatchEvent(mouseEvent);
+            if (isStylus && isDrawing) {
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: e.touches[0].clientX,
+                    clientY: e.touches[0].clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+                e.preventDefault(); // Previne rolagem apenas durante o desenho
+            }
+            // Movimentos com dedos não fazem nada (permitem rolagem)
         }
 
         function handleTouchEnd() {
-            const mouseEvent = new MouseEvent('mouseup');
-            canvas.dispatchEvent(mouseEvent);
+            if (isStylus) {
+                const mouseEvent = new MouseEvent('mouseup');
+                canvas.dispatchEvent(mouseEvent);
+            }
+            isStylus = false;
         }
 
         function clearCanvas() {
