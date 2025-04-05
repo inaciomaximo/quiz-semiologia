@@ -426,14 +426,14 @@ let currentLineWidth = 2;
 let eraserSize = 10;
 let currentHandwritingQuestion = -1;
 let isPenActive = false;
-let ignoreMouseEvents = false;
 
-// Novas variáveis para suavização
+// Variáveis para suavização
 let lastVelocity = 0;
 let lastWidth = currentLineWidth;
 let lastTime = 0;
+let points = []; // Para armazenar pontos temporários
 
-// ========== FUNÇÕES PRINCIPAIS (MANTIDAS IDÊNTICAS) ==========
+// ========== FUNÇÕES PRINCIPAIS ==========
 function initQuiz() {
     userAnswers = new Array(questions.length).fill("");
     userHandwritings = new Array(questions.length).fill("");
@@ -491,7 +491,7 @@ function finishQuiz() {
     // Lógica original de finalização
 }
 
-// ========== FUNÇÕES DE ESCRITA (APRIMORADAS - GOODNOTES STYLE) ==========
+// ========== FUNÇÕES DE ESCRITA ==========
 function openHandwritingModal(questionIndex) {
     currentHandwritingQuestion = questionIndex;
     document.getElementById('handwriting-modal').style.display = 'flex';
@@ -508,7 +508,7 @@ function setupCanvas() {
     canvas = document.getElementById('handwriting-canvas');
     const container = canvas.parentElement;
     
-    // Configuração HighDPI (GoodNotes style)
+    // Configuração HighDPI
     const scale = window.devicePixelRatio || 1;
     const width = parseInt(container.offsetWidth);
     const height = parseInt(container.offsetHeight);
@@ -521,7 +521,7 @@ function setupCanvas() {
     ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.scale(scale, scale);
     
-    // Estilo GoodNotes
+    // Estilo de escrita
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = currentColor;
@@ -539,35 +539,38 @@ function setupPointerEvents() {
     canvas.removeEventListener('pointermove', handlePointerMove);
     canvas.removeEventListener('pointerup', handlePointerEnd);
     canvas.removeEventListener('pointercancel', handlePointerEnd);
+    canvas.removeEventListener('pointerleave', handlePointerEnd);
     
     // Adiciona novos eventos
     canvas.addEventListener('pointerdown', handlePointerStart);
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerup', handlePointerEnd);
     canvas.addEventListener('pointercancel', handlePointerEnd);
+    canvas.addEventListener('pointerleave', handlePointerEnd);
 }
 
 function handlePointerStart(e) {
     if (e.pointerType === 'mouse' && isPenActive) return;
     
-    if (e.pointerType === 'pen') {
-        isPenActive = true;
-        ignoreMouseEvents = true;
-        lastWidth = calculateLineWidth(e.pressure);
-    } else {
-        lastWidth = currentLineWidth;
-    }
+    isPenActive = e.pointerType === 'pen';
     
     const pos = getPosition(e);
-    [lastX, lastY] = [pos.x, pos.y];
+    points = []; // Resetar pontos
+    points.push({
+        x: pos.x,
+        y: pos.y,
+        pressure: e.pressure || 0.5,
+        time: Date.now()
+    });
+    
+    lastX = pos.x;
+    lastY = pos.y;
     lastVelocity = 0;
     lastTime = Date.now();
+    lastWidth = calculateLineWidth(e.pressure || 0.5);
     
     isDrawing = true;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(lastX, lastY);
-    ctx.stroke();
+    drawStroke(e);
 }
 
 function handlePointerMove(e) {
@@ -575,10 +578,33 @@ function handlePointerMove(e) {
     
     const pos = getPosition(e);
     const now = Date.now();
-    const deltaTime = now - lastTime;
+    
+    points.push({
+        x: pos.x,
+        y: pos.y,
+        pressure: e.pressure || 0.5,
+        time: now
+    });
+    
+    // Limitar o número de pontos para performance
+    if (points.length > 5) {
+        points.shift();
+    }
+    
+    drawStroke(e);
+}
+
+function drawStroke(e) {
+    if (points.length < 2) return;
+    
+    const pos = getPosition(e);
+    const now = Date.now();
+    const lastPoint = points[points.length - 2];
+    const currentPoint = points[points.length - 1];
     
     // Cálculo de velocidade para suavização
-    const distance = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
+    const distance = Math.sqrt(Math.pow(currentPoint.x - lastPoint.x, 2) + Math.pow(currentPoint.y - lastPoint.y, 2));
+    const deltaTime = currentPoint.time - lastPoint.time;
     const velocity = distance / Math.max(1, deltaTime);
     const smoothedVelocity = 0.3 * velocity + 0.7 * lastVelocity;
     
@@ -591,7 +617,7 @@ function handlePointerMove(e) {
     }
     
     // Suavização da transição de largura
-    ctx.lineWidth = 0.5 * newWidth + 0.5 * lastWidth;
+    const lineWidth = 0.5 * newWidth + 0.5 * lastWidth;
     
     if (currentTool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
@@ -600,27 +626,43 @@ function handlePointerMove(e) {
         ctx.fill();
     } else {
         ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = lineWidth;
+        
         ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(currentPoint.x, currentPoint.y);
         ctx.stroke();
     }
     
-    [lastX, lastY] = [pos.x, pos.y];
+    lastX = pos.x;
+    lastY = pos.y;
     lastVelocity = smoothedVelocity;
-    lastWidth = newWidth;
+    lastWidth = lineWidth;
     lastTime = now;
 }
 
-function handlePointerEnd() {
+function handlePointerEnd(e) {
+    if (!isDrawing) return;
+    
+    // Desenhar os últimos pontos
+    if (points.length > 1 && currentTool !== 'eraser') {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+    }
+    
     isDrawing = false;
     isPenActive = false;
-    ignoreMouseEvents = false;
+    points = [];
 }
 
 function calculateLineWidth(pressure) {
     const baseWidth = currentTool === 'eraser' ? eraserSize : currentLineWidth;
-    return baseWidth * (0.5 + pressure * 1.5); // Curva de pressão natural
+    return baseWidth * (0.5 + Math.min(pressure * 1.5, 1.5)); // Limitar o máximo para evitar linhas muito grossas
 }
 
 function getPosition(e) {
@@ -685,7 +727,7 @@ function closeHandwritingModal() {
     currentHandwritingQuestion = -1;
 }
 
-// ========== FERRAMENTAS (MANTIDAS COMO ORIGINAL) ==========
+// ========== FERRAMENTAS ==========
 function setTool(tool) {
     currentTool = tool;
     if (tool === 'eraser') {
