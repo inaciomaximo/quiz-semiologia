@@ -138,36 +138,65 @@
             }
         }
         
-        /* Estilos para a área de escrita */
-        .input-method-selector {
+        /* Modal de escrita */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            border-radius: 10px;
             display: flex;
-            margin-bottom: 10px;
-            border-radius: 5px;
+            flex-direction: column;
             overflow: hidden;
         }
-        .input-method-btn {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            background-color: #eee;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .input-method-btn.active {
-            background-color: #3498db;
+        .modal-header {
+            padding: 15px;
+            background: #2c3e50;
             color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+        }
+        .modal-footer {
+            padding: 15px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
         }
         
         /* Área de escrita manual */
         .handwriting-container {
             width: 100%;
-            margin: 15px 0;
+            height: 100%;
             position: relative;
         }
         #handwriting-canvas {
             width: 100%;
-            height: 300px;
+            height: 100%;
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: white;
@@ -250,6 +279,26 @@
             color: #e74c3c;
             font-size: 18px;
         }
+        
+        /* Botão de escrita manual */
+        .handwriting-btn {
+            width: 100%;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .handwriting-btn:hover {
+            background: #e9ecef;
+        }
+        .handwriting-btn.has-content {
+            border: 2px solid #2196f3;
+            background: #e3f2fd;
+        }
     </style>
 </head>
 <body>
@@ -280,6 +329,41 @@
     <div id="access-denied" class="access-denied" style="display: none;">
         <h2>AGUARDE</h2>
         <p>Você será redirecionado em breve...</p>
+    </div>
+    
+    <!-- Modal de escrita manual -->
+    <div id="handwriting-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Escreva sua resposta</h3>
+                <button class="close-modal" onclick="closeHandwritingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="handwriting-container">
+                    <canvas id="handwriting-canvas"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="handwriting-tools">
+                    <div class="pen-colors">
+                        <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
+                        <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
+                        <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
+                        <div class="tool-separator"></div>
+                        <div class="pen-color eraser" onclick="setEraser(this)"></div>
+                    </div>
+                    <div class="tool-size">
+                        <div class="tool-size-btn active" onclick="setToolSize(1)">1</div>
+                        <div class="tool-size-btn" onclick="setToolSize(2)">2</div>
+                        <div class="tool-size-btn" onclick="setToolSize(3)">3</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-finish" onclick="clearCanvas()">Limpar Tudo</button>
+                    <button class="btn btn-next" onclick="saveHandwriting()">Salvar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -871,7 +955,9 @@ b) Hipermenorragia`,
         let userAnswers = [];
         let userHandwritings = [];
         let reviewPage = 0;
-        let currentInputMethod = 'handwriting'; // Modo escrita pré-selecionado
+        let answeredQuestions = 0;
+        
+        // Variáveis para controle da escrita manual
         let canvas, ctx;
         let isDrawing = false;
         let lastX = 0;
@@ -880,7 +966,7 @@ b) Hipermenorragia`,
         let currentTool = 'pen';
         let currentLineWidth = 1;
         let eraserSize = 10;
-        let answeredQuestions = 0;
+        let currentHandwritingQuestion = -1;
 
         // ========== FUNÇÕES PRINCIPAIS ==========
         function initQuiz() {
@@ -910,35 +996,10 @@ b) Hipermenorragia`,
             questionCard.innerHTML = `
                 <div class="question-text">${questions[currentQuestion].text}</div>
                 
-                <div class="input-method-selector">
-                    <div class="input-method-btn ${currentInputMethod === 'text' ? 'active' : ''}" onclick="setInputMethod('text')">Digitar</div>
-                    <div class="input-method-btn ${currentInputMethod === 'handwriting' ? 'active' : ''}" onclick="setInputMethod('handwriting')">Escrever</div>
-                </div>
+                <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui..." style="margin-bottom: 15px;">${userAnswers[currentQuestion]}</textarea>
                 
-                <div id="text-input" style="${currentInputMethod === 'text' ? '' : 'display:none;'}">
-                    <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui...">${userAnswers[currentQuestion]}</textarea>
-                </div>
-                
-                <div id="handwriting-input" style="${currentInputMethod === 'handwriting' ? '' : 'display:none;'}">
-                    <div class="handwriting-container">
-                        <canvas id="handwriting-canvas"></canvas>
-                    </div>
-                    <div class="handwriting-tools">
-                        <div class="pen-colors">
-                            <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
-                            <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
-                            <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
-                            <div class="tool-separator"></div>
-                            <div class="pen-color eraser" onclick="setEraser(this)"></div>
-                        </div>
-                        <div class="tool-size">
-                            <div class="tool-size-btn ${currentLineWidth === 1 ? 'active' : ''}" onclick="setToolSize(1)">1</div>
-                            <div class="tool-size-btn ${currentLineWidth === 2 ? 'active' : ''}" onclick="setToolSize(2)">2</div>
-                            <div class="tool-size-btn ${currentLineWidth === 3 ? 'active' : ''}" onclick="setToolSize(3)">3</div>
-                        </div>
-                        <div style="flex-grow: 1;"></div>
-                        <button class="btn btn-next" onclick="clearCanvas()">Limpar Tudo</button>
-                    </div>
+                <div class="handwriting-btn ${userHandwritings[currentQuestion] ? 'has-content' : ''}" onclick="openHandwritingModal(${currentQuestion})">
+                    ${userHandwritings[currentQuestion] ? 'Resposta escrita disponível - Clique para editar' : 'Clique para escrever sua resposta à mão'}
                 </div>
                 
                 <div class="navigation">
@@ -948,25 +1009,61 @@ b) Hipermenorragia`,
             `;
 
             questionScreen.appendChild(questionCard);
+        }
+
+        // ========== FUNÇÕES DO MODAL DE ESCRITA MANUAL ==========
+        function openHandwritingModal(questionIndex) {
+            currentHandwritingQuestion = questionIndex;
+            const modal = document.getElementById('handwriting-modal');
+            modal.style.display = 'flex';
             
-            if (currentInputMethod === 'handwriting' && userHandwritings[currentQuestion]) {
-                loadHandwriting();
-            } else if (currentInputMethod === 'handwriting') {
+            // Configurar o canvas
+            setTimeout(() => {
                 setupCanvas();
+                
+                // Carregar escrita existente se houver
+                if (userHandwritings[questionIndex]) {
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = userHandwritings[questionIndex];
+                }
+            }, 100);
+        }
+
+        function closeHandwritingModal() {
+            document.getElementById('handwriting-modal').style.display = 'none';
+            currentHandwritingQuestion = -1;
+        }
+
+        function saveHandwriting() {
+            if (currentHandwritingQuestion >= 0) {
+                const dataURL = canvas.toDataURL('image/png');
+                userHandwritings[currentHandwritingQuestion] = dataURL;
+                userAnswers[currentHandwritingQuestion] = "Resposta escrita à mão";
+                
+                // Atualizar o botão de escrita manual
+                const handwritingBtn = document.querySelector('.handwriting-btn');
+                if (handwritingBtn) {
+                    handwritingBtn.classList.add('has-content');
+                    handwritingBtn.textContent = 'Resposta escrita disponível - Clique para editar';
+                }
+                
+                closeHandwritingModal();
+                renderQuestion(); // Atualiza a visualização
             }
         }
 
         function setupCanvas() {
+            const canvasContainer = document.querySelector('.handwriting-container');
             canvas = document.getElementById('handwriting-canvas');
-            if (!canvas) return;
+            
+            // Redimensionar canvas para ocupar todo o espaço disponível
+            canvas.width = canvasContainer.offsetWidth;
+            canvas.height = canvasContainer.offsetHeight;
             
             ctx = canvas.getContext('2d');
-            
-            const scale = window.devicePixelRatio || 1;
-            canvas.width = canvas.offsetWidth * scale;
-            canvas.height = canvas.offsetHeight * scale;
-            ctx.scale(scale, scale);
-            
             ctx.lineWidth = currentLineWidth;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -974,27 +1071,28 @@ b) Hipermenorragia`,
             ctx.shadowBlur = 1;
             ctx.shadowColor = currentColor;
             
+            // Desenhar linhas guia
             drawGuidelines();
+            
+            // Configurar eventos
+            canvas.removeEventListener('mousedown', startDrawing);
+            canvas.removeEventListener('mousemove', draw);
+            canvas.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('mouseout', stopDrawing);
             
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
             
+            // Eventos de toque para dispositivos móveis
+            canvas.removeEventListener('touchstart', handleTouchStart);
+            canvas.removeEventListener('touchmove', handleTouchMove);
+            canvas.removeEventListener('touchend', handleTouchEnd);
+            
             canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
             canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleTouchEnd);
-        }
-
-        function loadHandwriting() {
-            if (!userHandwritings[currentQuestion]) return;
-            
-            const img = new Image();
-            img.onload = function() {
-                setupCanvas();
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            };
-            img.src = userHandwritings[currentQuestion];
         }
 
         function drawGuidelines() {
@@ -1084,10 +1182,9 @@ b) Hipermenorragia`,
                 y = e.clientY - rect.top;
             }
             
-            const scale = window.devicePixelRatio || 1;
             return {
-                x: x * (canvas.width / rect.width / scale),
-                y: y * (canvas.height / rect.height / scale)
+                x: x * (canvas.width / rect.width),
+                y: y * (canvas.height / rect.height)
             };
         }
 
@@ -1154,32 +1251,11 @@ b) Hipermenorragia`,
             }
         }
 
+        // ========== FUNÇÕES DE NAVEGAÇÃO ==========
         function saveCurrentAnswer() {
-            if (currentInputMethod === 'text') {
-                const textarea = document.getElementById(`answer-${currentQuestion}`);
-                if (textarea) {
-                    userAnswers[currentQuestion] = textarea.value;
-                }
-            } else if (currentInputMethod === 'handwriting') {
-                const dataURL = canvas.toDataURL('image/png');
-                userHandwritings[currentQuestion] = dataURL;
-                userAnswers[currentQuestion] = "Resposta escrita à mão";
-            }
-        }
-
-        function setInputMethod(method) {
-            saveCurrentAnswer();
-            currentInputMethod = method;
-            document.getElementById('text-input').style.display = method === 'text' ? 'block' : 'none';
-            document.getElementById('handwriting-input').style.display = method === 'handwriting' ? 'block' : 'none';
-            
-            const buttons = document.querySelectorAll('.input-method-btn');
-            buttons.forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.toLowerCase() === method);
-            });
-            
-            if (method === 'handwriting') {
-                setupCanvas();
+            const textarea = document.getElementById(`answer-${currentQuestion}`);
+            if (textarea) {
+                userAnswers[currentQuestion] = textarea.value;
             }
         }
 
@@ -1288,8 +1364,149 @@ b) Hipermenorragia`,
             }
         }
 
+        function prevReviewPage() {
+            if (reviewPage > 0) {
+                reviewPage--;
+                renderReview();
+            }
+        }
+
+        function nextReviewPage() {
+            if (reviewPage < Math.ceil(questions.length / 3) - 1) {
+                reviewPage++;
+                renderReview();
+            }
+        }
+
+        // ========== EVENT LISTENERS ADICIONAIS ==========
+        // Melhorar a experiência de toque em dispositivos móveis
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'TEXTAREA') {
+                e.target.classList.add('touch-active');
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(e) {
+            const activeElements = document.querySelectorAll('.touch-active');
+            activeElements.forEach(el => {
+                el.classList.remove('touch-active');
+            });
+        }, { passive: true });
+
+        // Prevenir zoom indesejado em campos de texto
+        document.addEventListener('dblclick', function(e) {
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Otimização para dispositivos com caneta/stylus
+        function handlePointerEvents() {
+            if ('PointerEvent' in window) {
+                canvas.addEventListener('pointerdown', startDrawing);
+                canvas.addEventListener('pointermove', draw);
+                canvas.addEventListener('pointerup', stopDrawing);
+                canvas.addEventListener('pointerout', stopDrawing);
+                
+                // Configurações especiais para canetas
+                canvas.addEventListener('pointerenter', function(e) {
+                    if (e.pointerType === 'pen') {
+                        // Ajustar sensibilidade para caneta
+                        ctx.lineWidth = currentLineWidth * 1.2;
+                    }
+                });
+                
+                canvas.addEventListener('pointerleave', function() {
+                    ctx.lineWidth = currentLineWidth;
+                });
+            }
+        }
+
+        // Verificar suporte a API de Pressão
+        function checkPressureSupport() {
+            if ('getCoalescedEvents' in PointerEvent.prototype) {
+                canvas.addEventListener('pointermove', function(e) {
+                    if (e.pointerType === 'pen' && e.pressure !== 0) {
+                        // Ajustar espessura da linha baseado na pressão
+                        ctx.lineWidth = currentLineWidth * (0.5 + e.pressure * 1.5);
+                    }
+                });
+            }
+        }
+
+        // ========== INICIALIZAÇÃO ==========
+        function initializeHandwritingFeatures() {
+            // Configurar eventos de ponteiro se suportados
+            handlePointerEvents();
+            
+            // Verificar suporte a pressão da caneta
+            checkPressureSupport();
+            
+            // Configurações para melhor desempenho em tablets
+            if ('ontouchstart' in window) {
+                // Ajustar tamanho do canvas para dispositivos móveis
+                const handwritingContainer = document.querySelector('.handwriting-container');
+                if (handwritingContainer) {
+                    handwritingContainer.style.height = '60vh';
+                }
+                
+                // Melhorar a resposta ao toque
+                document.body.style.touchAction = 'manipulation';
+            }
+        }
+
+        // ========== SALVAMENTO AUTOMÁTICO ==========
+        // Salvar automaticamente as respostas periodicamente
+        function setupAutoSave() {
+            setInterval(() => {
+                saveCurrentAnswer();
+                
+                // Salvar também a escrita manual se o modal estiver aberto
+                if (currentHandwritingQuestion >= 0) {
+                    const dataURL = canvas.toDataURL('image/png');
+                    userHandwritings[currentHandwritingQuestion] = dataURL;
+                }
+            }, 30000); // Salva a cada 30 segundos
+        }
+
         // ========== INICIAR VERIFICAÇÃO DE IP ==========
-        window.onload = checkIPAuthorization;
+        window.onload = function() {
+            checkIPAuthorization();
+            
+            // Inicializar recursos de escrita manual após carregamento
+            setTimeout(() => {
+                initializeHandwritingFeatures();
+                setupAutoSave();
+            }, 1000);
+        };
+
+        // ========== FUNÇÕES DE ACESSIBILIDADE ==========
+        // Melhorar acessibilidade para usuários com necessidades especiais
+        function setupAccessibility() {
+            // Adicionar rótulos ARIA para elementos interativos
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                if (!button.getAttribute('aria-label')) {
+                    button.setAttribute('aria-label', button.textContent.trim());
+                }
+            });
+            
+            // Adicionar suporte a teclado para o canvas
+            if (canvas) {
+                canvas.setAttribute('role', 'img');
+                canvas.setAttribute('aria-label', 'Área de escrita manual');
+                canvas.setAttribute('tabindex', '0');
+                
+                canvas.addEventListener('keydown', function(e) {
+                    if (e.key === 'Delete' || e.key === 'Backspace') {
+                        clearCanvas();
+                    }
+                });
+            }
+        }
+
+        // Configurar acessibilidade após carregamento
+        document.addEventListener('DOMContentLoaded', setupAccessibility);
     </script>
 </body>
 </html>
