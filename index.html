@@ -547,28 +547,46 @@ function setupCanvas() {
 }
 
 function setupPointerEvents() {
-    // Limpa eventos antigos
     canvas.removeEventListener('pointerdown', handlePointerStart);
     canvas.removeEventListener('pointermove', handlePointerMove);
     canvas.removeEventListener('pointerup', handlePointerEnd);
     canvas.removeEventListener('pointercancel', handlePointerEnd);
     canvas.removeEventListener('pointerleave', handlePointerEnd);
     
-    // Adiciona novos eventos
-    canvas.addEventListener('pointerdown', handlePointerStart);
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerup', handlePointerEnd);
-    canvas.addEventListener('pointercancel', handlePointerEnd);
-    canvas.addEventListener('pointerleave', handlePointerEnd);
+    // Adiciona eventos com {passive: false} para melhor controle
+    canvas.addEventListener('pointerdown', handlePointerStart, {passive: false});
+    canvas.addEventListener('pointermove', handlePointerMove, {passive: false});
+    canvas.addEventListener('pointerup', handlePointerEnd, {passive: false});
+    canvas.addEventListener('pointercancel', handlePointerEnd, {passive: false});
+    canvas.addEventListener('pointerleave', handlePointerEnd, {passive: false});
+    
+    // Adiciona estilos para evitar seleção de texto
+    canvas.style.touchAction = 'none';
+    canvas.style.userSelect = 'none';
+    canvas.style.webkitUserSelect = 'none';
+    canvas.style.msUserSelect = 'none';
+}
+
+// Adicionar esta função e chamá-la no setupCanvas()
+function optimizeCanvasPerformance() {
+    if (ctx) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+    }
 }
 
 function handlePointerStart(e) {
-    if (e.pointerType === 'mouse' && isPenActive) return;
+    e.preventDefault(); // Impede comportamentos padrão como seleção de texto
     
-    isPenActive = e.pointerType === 'pen';
+    // Ignora toques de dedo (só aceita caneta/mouse)
+    if (e.pointerType === 'touch') return;
+    
+    isPenActive = e.pointerType === 'pen' || e.pointerType === 'mouse';
     
     const pos = getPosition(e);
-    points = []; // Resetar pontos
+    points = [];
     points.push({
         x: pos.x,
         y: pos.y,
@@ -584,6 +602,9 @@ function handlePointerStart(e) {
     
     isDrawing = true;
     drawStroke(e);
+    
+    // Força o foco no canvas para evitar seleção de texto
+    canvas.focus();
 }
 
 function handlePointerMove(e) {
