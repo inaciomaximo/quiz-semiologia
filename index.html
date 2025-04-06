@@ -305,8 +305,15 @@
             border: 2px solid #2196f3;
             background: #e3f2fd;
         }
-
-        @media (max-width: 600px) {
+        .modal-header, .modal-footer {
+        user-select: none;
+        -webkit-user-select: none;
+        }
+    .modal-header h3 {
+        pointer-events: none;
+    }
+    
+    @media (max-width: 600px) {
             .container {
                 padding: 15px;
             }
@@ -324,7 +331,8 @@
             }
             .modal-body {
                 padding: 5px;
-            }
+            }    
+
         }
 </style>
 
@@ -360,39 +368,39 @@
     </div>
     
     <!-- Modal de escrita manual -->
-    <div id="handwriting-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Escreva sua resposta</h3>
-                <button class="close-modal" onclick="closeHandwritingModal()">&times;</button>
+<div id="handwriting-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" style="user-select: none; -webkit-user-select: none;">
+            <h3 style="pointer-events: none;">Escreva sua resposta</h3>
+            <button class="close-modal" onclick="closeHandwritingModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="handwriting-container">
+                <canvas id="handwriting-canvas"></canvas>
             </div>
-            <div class="modal-body">
-                <div class="handwriting-container">
-                    <canvas id="handwriting-canvas"></canvas>
+        </div>
+        <div class="modal-footer" style="user-select: none; -webkit-user-select: none;">
+            <div class="handwriting-tools">
+                <div class="pen-colors">
+                    <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
+                    <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
+                    <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
+                    <div class="tool-separator"></div>
+                    <div class="pen-color eraser" onclick="setEraser(this)"></div>
+                </div>
+                <div class="tool-size">
+                    <div class="tool-size-btn active" onclick="setToolSize(1)">1</div>
+                    <div class="tool-size-btn" onclick="setToolSize(2)">2</div>
+                    <div class="tool-size-btn" onclick="setToolSize(3)">3</div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <div class="handwriting-tools">
-                    <div class="pen-colors">
-                        <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
-                        <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
-                        <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
-                        <div class="tool-separator"></div>
-                        <div class="pen-color eraser" onclick="setEraser(this)"></div>
-                    </div>
-                    <div class="tool-size">
-                        <div class="tool-size-btn active" onclick="setToolSize(1)">1</div>
-                        <div class="tool-size-btn" onclick="setToolSize(2)">2</div>
-                        <div class="tool-size-btn" onclick="setToolSize(3)">3</div>
-                    </div>
-                </div>
-                <div>
-                    <button class="btn btn-finish" onclick="clearCanvas()">Limpar Tudo</button>
-                    <button class="btn btn-next" onclick="saveHandwriting()">Salvar</button>
-                </div>
+            <div>
+                <button class="btn btn-finish" onclick="clearCanvas()">Limpar Tudo</button>
+                <button class="btn btn-next" onclick="saveHandwriting()">Salvar</button>
             </div>
         </div>
     </div>
+</div>
 
 <script>
 // ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
