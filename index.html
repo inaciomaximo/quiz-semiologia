@@ -578,9 +578,8 @@ function optimizeCanvasPerformance() {
 }
 
 function handlePointerStart(e) {
-    e.preventDefault(); // Impede comportamentos padrão como seleção de texto
+    e.preventDefault();
     
-    // Ignora toques de dedo (só aceita caneta/mouse)
     if (e.pointerType === 'touch') return;
     
     isPenActive = e.pointerType === 'pen' || e.pointerType === 'mouse';
@@ -601,18 +600,27 @@ function handlePointerStart(e) {
     lastWidth = calculateLineWidth(e.pressure || 0.5);
     
     isDrawing = true;
-    drawStroke(e);
     
-    // Força o foco no canvas para evitar seleção de texto
+    // Desenha imediatamente um ponto para evitar espaços em branco
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = lastWidth;
+    
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, lastWidth/2, 0, Math.PI * 2);
+    ctx.fill();
+    
     canvas.focus();
 }
 
 function handlePointerMove(e) {
     if (!isDrawing) return;
+    e.preventDefault();
     
     const pos = getPosition(e);
     const now = Date.now();
     
+    // Adiciona ponto atual
     points.push({
         x: pos.x,
         y: pos.y,
@@ -620,38 +628,44 @@ function handlePointerMove(e) {
         time: now
     });
     
-    // Limitar o número de pontos para performance
-    if (points.length > 5) {
+    // Limita o buffer de pontos para melhor performance
+    if (points.length > 3) {
         points.shift();
     }
     
-    drawStroke(e);
+    // Desenha imediatamente sem esperar por suavização
+    if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        
+        // Desenha linha reta entre os pontos
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        
+        // Desenha um ponto extra para garantir continuidade
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, currentLineWidth/2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    lastX = pos.x;
+    lastY = pos.y;
+    lastTime = now;
 }
 
 function drawStroke(e) {
-    if (points.length < 2) return;
+    // Função simplificada para desenho mais responsivo
+    if (!isDrawing) return;
     
     const pos = getPosition(e);
-    const now = Date.now();
-    const lastPoint = points[points.length - 2];
-    const currentPoint = points[points.length - 1];
-    
-    // Cálculo de velocidade para suavização
-    const distance = Math.sqrt(Math.pow(currentPoint.x - lastPoint.x, 2) + Math.pow(currentPoint.y - lastPoint.y, 2));
-    const deltaTime = currentPoint.time - lastPoint.time;
-    const velocity = distance / Math.max(1, deltaTime);
-    const smoothedVelocity = 0.3 * velocity + 0.7 * lastVelocity;
-    
-    // Ajuste de largura baseado na pressão/velocidade
-    let newWidth;
-    if (e.pointerType === 'pen' && e.pressure > 0) {
-        newWidth = calculateLineWidth(e.pressure);
-    } else {
-        newWidth = Math.max(1, currentLineWidth - smoothedVelocity * 0.5);
-    }
-    
-    // Suavização da transição de largura
-    const lineWidth = 0.5 * newWidth + 0.5 * lastWidth;
     
     if (currentTool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
@@ -661,19 +675,16 @@ function drawStroke(e) {
     } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = currentColor;
-        ctx.lineWidth = lineWidth;
+        ctx.lineWidth = currentLineWidth;
         
         ctx.beginPath();
-        ctx.moveTo(lastPoint.x, lastPoint.y);
-        ctx.lineTo(currentPoint.x, currentPoint.y);
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
     }
     
     lastX = pos.x;
     lastY = pos.y;
-    lastVelocity = smoothedVelocity;
-    lastWidth = lineWidth;
-    lastTime = now;
 }
 
 function handlePointerEnd(e) {
