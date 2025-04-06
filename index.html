@@ -550,8 +550,30 @@ function setupCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     
+    // Otimizações para escrita rápida
+    optimizeCanvasForFastWriting();
     setupPointerEvents();
     drawGuidelines();
+}
+
+function optimizeCanvasForFastWriting() {
+    // Otimizações para melhor performance
+    canvas.style.willChange = 'contents';
+    ctx.imageSmoothingEnabled = false;
+    
+    // Configurações para reduzir latência
+    if (navigator.userAgent.match(/Android/i)) {
+        canvas.style.touchAction = 'none';
+        canvas.style.msTouchAction = 'none';
+    }
+    
+    // Força o browser a priorizar o canvas
+    if (typeof HTMLCanvasElement.prototype.getContext === 'function') {
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+    }
 }
 
 function setupPointerEvents() {
@@ -628,45 +650,37 @@ function handlePointerMove(e) {
     const pos = getPosition(e);
     const now = Date.now();
     
-    // Adiciona ponto atual
-    points.push({
-        x: pos.x,
-        y: pos.y,
-        pressure: e.pressure || 0.5,
-        time: now
-    });
+    // Configurações do desenho
+    ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = currentTool === 'eraser' ? eraserSize : calculateLineWidth(e.pressure || 0.5);
     
-    // Limita o buffer de pontos para melhor performance
-    if (points.length > 3) {
-        points.shift();
-    }
-    
-    // Desenha imediatamente sem esperar por suavização
+    // Otimização para desenho rápido
     if (currentTool === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
         ctx.fill();
     } else {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = currentLineWidth;
-        
-        // Desenha linha reta entre os pontos
+        // Desenha linha conectando os pontos
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
         
-        // Desenha um ponto extra para garantir continuidade
+        // Desenha um ponto adicional para melhor continuidade
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, currentLineWidth/2, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, ctx.lineWidth/2, 0, Math.PI * 2);
         ctx.fill();
     }
     
+    // Atualiza as posições
     lastX = pos.x;
     lastY = pos.y;
-    lastTime = now;
+    
+    // Reduz a latência solicitando o próximo frame de animação
+    if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(() => {});
+    }
 }
 
 function drawStroke(e) {
