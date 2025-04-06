@@ -436,12 +436,12 @@ let currentLineWidth = 2;
 let eraserSize = 10;
 let currentHandwritingQuestion = -1;
 let isPenActive = false;
-
-// Variáveis para suavização
+let lastPointerTime = 0;
+const MIN_POINTER_INTERVAL = 3;
 let lastVelocity = 0;
 let lastWidth = currentLineWidth;
 let lastTime = 0;
-let points = []; // Para armazenar pontos temporários
+let points = [];
 
 // ========== FUNÇÕES PRINCIPAIS ==========
 function initQuiz() {
@@ -542,7 +542,7 @@ function setupCanvas() {
     ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.scale(scale, scale);
     
-    // Estilo de escrita
+    // Estilo inicial
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = currentColor;
@@ -550,7 +550,8 @@ function setupCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     
-    // Otimizações para escrita rápida
+    // Otimizações
+    canvas.style.willChange = 'contents';  // Movido para cá
     optimizeCanvasForFastWriting();
     setupPointerEvents();
     drawGuidelines();
@@ -577,112 +578,105 @@ function optimizeCanvasForFastWriting() {
 }
 
 function setupPointerEvents() {
-    canvas.removeEventListener('pointerdown', handlePointerStart);
-    canvas.removeEventListener('pointermove', handlePointerMove);
-    canvas.removeEventListener('pointerup', handlePointerEnd);
-    canvas.removeEventListener('pointercancel', handlePointerEnd);
-    canvas.removeEventListener('pointerleave', handlePointerEnd);
-    
-    // Adiciona eventos com {passive: false} para melhor controle
-    canvas.addEventListener('pointerdown', handlePointerStart, {passive: false});
-    canvas.addEventListener('pointermove', handlePointerMove, {passive: false});
-    canvas.addEventListener('pointerup', handlePointerEnd, {passive: false});
-    canvas.addEventListener('pointercancel', handlePointerEnd, {passive: false});
-    canvas.addEventListener('pointerleave', handlePointerEnd, {passive: false});
-    
-    // Adiciona estilos para evitar seleção de texto
-    canvas.style.touchAction = 'none';
-    canvas.style.userSelect = 'none';
-    canvas.style.webkitUserSelect = 'none';
-    canvas.style.msUserSelect = 'none';
-}
+    // Remove listeners de forma mais eficiente
+    const newCanvas = canvas.cloneNode(false);
+    canvas.replaceWith(newCanvas);
+    canvas = newCanvas;
 
-// Adicionar esta função e chamá-la no setupCanvas()
-function optimizeCanvasPerformance() {
-    if (ctx) {
-        ctx.imageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
-        ctx.mozImageSmoothingEnabled = false;
-        ctx.msImageSmoothingEnabled = false;
-    }
+    // Configuração única para eventos
+    const eventConfig = { 
+        passive: false, 
+        capture: true  // Melhora resposta em mobile
+    };
+
+    // Adiciona todos os eventos
+    [
+        ['pointerdown', handlePointerStart],
+        ['pointermove', handlePointerMove],
+        ['pointerup', handlePointerEnd],
+        ['pointercancel', handlePointerEnd],
+        ['pointerleave', handlePointerEnd]
+    ].forEach(([event, handler]) => {
+        canvas.addEventListener(event, handler, eventConfig);
+    });
+
+    // Estilos de bloqueio
+    Object.assign(canvas.style, {
+        touchAction: 'none',
+        userSelect: 'none',
+        webkitUserSelect: 'none',
+        msUserSelect: 'none'
+    });
 }
 
 function handlePointerStart(e) {
     e.preventDefault();
     
-    if (e.pointerType === 'touch') return;
-    
-    isPenActive = e.pointerType === 'pen' || e.pointerType === 'mouse';
+    // Detecção melhorada de caneta
+    isPenActive = e.pointerType === 'pen' || (e.pressure && e.pressure > 0);
     
     const pos = getPosition(e);
-    points = [];
-    points.push({
-        x: pos.x,
-        y: pos.y,
-        pressure: e.pressure || 0.5,
-        time: Date.now()
-    });
-    
     lastX = pos.x;
     lastY = pos.y;
-    lastVelocity = 0;
-    lastTime = Date.now();
-    lastWidth = calculateLineWidth(e.pressure || 0.5);
+    lastPointerTime = performance.now();
     
-    isDrawing = true;
-    
-    // Desenha imediatamente um ponto para evitar espaços em branco
+    // Configurações iniciais
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = currentColor;
-    ctx.lineWidth = lastWidth;
+    ctx.lineWidth = isPenActive ? calculateLineWidth(e.pressure || 0.8) : currentLineWidth;
     
+    // Primeiro ponto
     ctx.beginPath();
-    ctx.arc(pos.x, pos.y, lastWidth/2, 0, Math.PI * 2);
+    ctx.arc(pos.x, pos.y, ctx.lineWidth/2, 0, Math.PI * 2);
     ctx.fill();
     
-    canvas.focus();
+    isDrawing = true;
 }
+
 
 function handlePointerMove(e) {
     if (!isDrawing) return;
     e.preventDefault();
     
+    // Detecção de caneta em tempo real
+    if (e.pointerType === 'pen') {
+        isPenActive = true;
+        ctx.lineWidth = calculateLineWidth(e.pressure || 0.8);
+    }
+    
+    const now = performance.now();
+    if (now - lastPointerTime < MIN_POINTER_INTERVAL) return;
+    lastPointerTime = now;
+    
     const pos = getPosition(e);
-    const now = Date.now();
     
-    // Configurações do desenho
+    // Configuração de ferramenta
     ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = currentColor;
-    ctx.lineWidth = currentTool === 'eraser' ? eraserSize : calculateLineWidth(e.pressure || 0.5);
     
-    // Otimização para desenho rápido
     if (currentTool === 'eraser') {
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
         ctx.fill();
     } else {
-        // Desenha linha conectando os pontos
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = isPenActive ? calculateLineWidth(e.pressure || 0.8) : currentLineWidth;
+        
+        // Linha principal
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
         
-        // Desenha um ponto adicional para melhor continuidade
+        // Ponto extra para continuidade
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, ctx.lineWidth/2, 0, Math.PI * 2);
         ctx.fill();
     }
     
-    // Atualiza as posições
     lastX = pos.x;
     lastY = pos.y;
-    
-    // Reduz a latência solicitando o próximo frame de animação
-    if (typeof requestAnimationFrame !== 'undefined') {
-        requestAnimationFrame(() => {});
-    }
 }
-
+    
 function drawStroke(e) {
     // Função simplificada para desenho mais responsivo
     if (!isDrawing) return;
@@ -711,25 +705,21 @@ function drawStroke(e) {
 
 function handlePointerEnd(e) {
     if (!isDrawing) return;
+    e.preventDefault();
     
-    // Desenhar os últimos pontos
-    if (points.length > 1 && currentTool !== 'eraser') {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
-    }
+    // Garante que o último ponto seja desenhado
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, ctx.lineWidth/2, 0, Math.PI * 2);
+    ctx.fill();
     
     isDrawing = false;
     isPenActive = false;
-    points = [];
 }
-
+    
 function calculateLineWidth(pressure) {
     const baseWidth = currentTool === 'eraser' ? eraserSize : currentLineWidth;
-    return baseWidth * (0.5 + Math.min(pressure * 1.5, 1.5)); // Limitar o máximo para evitar linhas muito grossas
+    const calculated = baseWidth * (0.5 + Math.min(pressure * 1.5, 1.5));
+    return Math.max(calculated, 0.5); // Garante um mínimo de 0.5px
 }
 
 function getPosition(e) {
