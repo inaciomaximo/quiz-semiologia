@@ -769,50 +769,45 @@
                 document.querySelector('#areasChart').closest('.stat-card').style.display = 'none';
             }
             
-// ============= GRÁFICO DE ERROS POR QUESTÃO =============
-function generateMistakesChart() {
-    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
-    const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-    
-    const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
-    const mistakesData = countMistakesByQuestion();
-    
-    charts.mistakes = new Chart(mistakesCtx, {
-        type: 'bar',
-        data: {
-            labels: mistakesData.labels,
-            datasets: [{
-                label: 'Vezes errada',
-                data: mistakesData.values,
-                backgroundColor: incorrectColor,
-                borderColor: borderColor,
-                borderWidth: 1
-            }]
-        },
-        options: getChartOptions('Questões com Erros', textColor, {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 20,
-                    ticks: { color: textColor, stepSize: 1 },
-                    grid: { color: borderColor }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        afterLabel: function(context) {
-                            const qIndex = mistakesData.questions[context.dataIndex];
-                            const question = currentTestQuestions[qIndex];
-                            return `Resposta correta: ${question.correta.toUpperCase()}`;
+            // Gráfico de erros por questão
+            const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
+            const mistakesData = countMistakesByQuestion();
+            
+            charts.mistakes = new Chart(mistakesCtx, {
+                type: 'bar',
+                data: {
+                    labels: mistakesData.labels,
+                    datasets: [{
+                        label: 'Vezes errada',
+                        data: mistakesData.values,
+                        backgroundColor: incorrectColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Questões com Erros', textColor, {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 20,
+                            ticks: { color: textColor, stepSize: 1 },
+                            grid: { color: borderColor }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const qIndex = mistakesData.questions[context.dataIndex];
+                                    const question = currentTestQuestions[qIndex];
+                                    return `Resposta correta: ${question.correta.toUpperCase()}`;
+                                }
+                            }
                         }
                     }
-                }
-            }
-        })
-    });
-}
+                })
+            });
+        }
 
         // Gerar gráficos adicionais
         function generateAdditionalCharts() {
