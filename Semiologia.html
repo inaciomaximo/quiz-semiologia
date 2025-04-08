@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prova Dissertativa de Semiologia</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            touch-action: manipulation;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .question-card {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .question-card.active {
+            display: block;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            white-space: pre-line;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+            touch-action: manipulation;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: background 0.3s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .btn-next {
+            background: #2ecc71;
+            color: white;
+        }
+        .btn-next:hover {
+            background: #27ae60;
+        }
+        .btn-finish {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-finish:hover {
+            background: #c0392b;
+        }
+        .review-page {
+            display: none;
+        }
+        .review-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .review-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            white-space: pre-line;
+        }
+        .review-answer {
+            color: #555;
+            white-space: pre-line;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-answer {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .correct-answer {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        .handwriting-review {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            text-align: center;
+        }
+        .handwriting-review img {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* Modal de escrita */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 95%;
+            max-width: 900px;
+            height: 85%;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            flex: 1;
+            padding: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-footer {
+            padding: 15px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Área de escrita */
+        .handwriting-container {
+            flex: 1;
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: white;
+            touch-action: none;
+        }
+        #handwriting-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-image: linear-gradient(to bottom, #f5f5f5 1px, transparent 1px);
+            background-size: 100% 24px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Ferramentas */
+        .handwriting-tools {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .pen-colors {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .pen-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+        .pen-color:hover {
+            transform: scale(1.1);
+        }
+        .pen-color.active {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+        .pen-color.black {
+            background-color: #000000;
+        }
+        .pen-color.gray {
+            background-color: #808080;
+        }
+        .pen-color.blue {
+            background-color: #00aaff;
+        }
+        .pen-color.red {
+            background-color: #ff3b30;
+        }
+        .pen-color.eraser {
+            background-color: white;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        .pen-color.eraser::after {
+            content: "🧽";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        .tool-size {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tool-size-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tool-size-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .pen-settings {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .pressure-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            opacity: 0.7;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+
+        /* Botão de escrita */
+        .handwriting-btn {
+            width: 100%;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .handwriting-btn:hover {
+            background: #e9ecef;
+        }
+        .handwriting-btn.has-content {
+            border: 2px solid #2196f3;
+            background: #e3f2fd;
+        }
+        .modal-header, .modal-footer {
+        user-select: none;
+        -webkit-user-select: none;
+        }
+    .modal-header h3 {
+        pointer-events: none;
+    }
+    
+    @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .navigation {
+                flex-direction: column;
+            }
+            .modal-content {
+                width: 100%;
+                height: 95%;
+                border-radius: 0;
+            }
+            .modal-body {
+                padding: 5px;
+            }    
+
+        }
+</style>
+
+</head>
+<body>
+    <div class="container" id="main-content" style="display: none;">
+        <h1>Prova Dissertativa de Semiologia</h1>
+        
+        <div id="question-screen">
+            <!-- Questions will be dynamically inserted here -->
+        </div>
+
+        <div id="review-screen" class="review-page">
+            <h2>Comparação das Respostas</h2>
+            <div id="review-content">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+            <div class="navigation">
+                <button id="prev-review-btn" class="btn btn-next" onclick="prevReviewPage()">Anterior</button>
+                <button id="next-review-btn" class="btn btn-next" onclick="nextReviewPage()">Próximo</button>
+                <button id="return-btn" class="btn btn-finish" onclick="returnToQuiz()">Voltar para Questões</button>
+            </div>
+        </div>
+        
+        <footer>
+            Sistema de Prova Dissertativa - Semiomonsters © 2025
+        </footer>
+    </div>
+    
+    <div id="access-denied" class="access-denied" style="display: none;">
+        <h2>AGUARDE</h2>
+        <p>Você será redirecionado em breve...</p>
+    </div>
+    
+    <!-- Modal de escrita manual -->
+<div id="handwriting-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" style="user-select: none; -webkit-user-select: none;">
+            <h3 style="pointer-events: none;">Escreva sua resposta</h3>
+            <button class="close-modal" onclick="closeHandwritingModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="handwriting-container">
+                <canvas id="handwriting-canvas"></canvas>
+            </div>
+        </div>
+        <div class="modal-footer" style="user-select: none; -webkit-user-select: none;">
+            <div class="handwriting-tools">
+                <div class="pen-colors">
+                    <div class="pen-color black active" onclick="setPenColor('#000000', this)"></div>
+                    <div class="pen-color gray" onclick="setPenColor('#808080', this)"></div>
+                    <div class="pen-color blue" onclick="setPenColor('#00aaff', this)"></div>
+                    <div class="tool-separator"></div>
+                    <div class="pen-color eraser" onclick="setEraser(this)"></div>
+                </div>
+                <div class="tool-size">
+                    <div class="tool-size-btn active" onclick="setToolSize(1)">1</div>
+                    <div class="tool-size-btn" onclick="setToolSize(2)">2</div>
+                    <div class="tool-size-btn" onclick="setToolSize(3)">3</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-finish" onclick="clearCanvas()">Limpar Tudo</button>
+                <button class="btn btn-next" onclick="saveHandwriting()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
+const authorizedIPs = [
+    "177.141.171.90", 
+    "189.62.45.65", 
+    "205.164.163.249",
+    "189.62.47.211", 
+    "177.26.252.87", 
+    "179.209.47.6", 
+    "104.28.47.152", 
+    "179.209.141.88",
+    "104.28.47.100", 
+    "172.226.124.49", 
+    "179.110.59.207", 
+    "138.94.194.37", 
+    "191.17.172.101",
+];
+
+// ========== VARIÁVEIS GLOBAIS ==========
+let currentQuestion = 0;
+let userAnswers = [];
+let userHandwritings = [];
+let reviewPage = 0;
+let answeredQuestions = 0;
+let canvas, ctx;
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+let currentColor = '#000000';
+let currentTool = 'pen';
+let currentLineWidth = 2;
+let eraserSize = 10;
+let currentHandwritingQuestion = -1;
+let isPenActive = false;
+
+// Variáveis para suavização
+let lastVelocity = 0;
+let lastWidth = currentLineWidth;
+let lastTime = 0;
+let points = []; // Para armazenar pontos temporários
+
+// ========== FUNÇÕES PRINCIPAIS ==========
+function initQuiz() {
+    userAnswers = new Array(questions.length).fill("");
+    userHandwritings = new Array(questions.length).fill("");
+    
+    if (questions.length === 0) {
+        alert("Adicione pelo menos uma questão ao sistema.");
+        return;
+    }
+    
+    // Embaralha as questões
+    shuffleQuestions();
+    renderQuestion();
+}
+
+// Função para embaralhar as questões
+function shuffleQuestions() {
+    for (let i = questions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+}
+
+function renderQuestion() {
+    const questionScreen = document.getElementById("question-screen");
+    questionScreen.innerHTML = "";
+
+    const questionCard = document.createElement("div");
+    questionCard.className = "question-card active";
+
+    questionCard.innerHTML = `
+        <div class="question-text">${questions[currentQuestion].text}</div>
+        
+        <textarea id="answer-${currentQuestion}" placeholder="Digite sua resposta aqui...">${userAnswers[currentQuestion]}</textarea>
+        
+        <div class="handwriting-btn ${userHandwritings[currentQuestion] ? 'has-content' : ''}" onclick="openHandwritingModal(${currentQuestion})">
+            ${userHandwritings[currentQuestion] ? '✏️ Resposta escrita disponível - Clique para editar' : '🖊️ Clique para escrever à mão'}
+        </div>
+        
+        <div class="navigation">
+            ${currentQuestion > 0 ? `<button class="btn btn-next" onclick="prevQuestion()">Voltar</button>` : ''}
+            ${currentQuestion < questions.length - 1 ? 
+                `<button class="btn btn-next" onclick="nextQuestion()">Próxima</button>` : 
+                `<button class="btn btn-finish" onclick="finishQuiz()">Finalizar</button>`}
+        </div>
+    `;
+
+    questionScreen.appendChild(questionCard);
+}
+
+function prevQuestion() {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+    }
+}
+
+function nextQuestion() {
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+    }
+}
+
+function finishQuiz() {
+    alert("Quiz finalizado! Verifique suas respostas.");
+    // Lógica original de finalização
+}
+
+// ========== FUNÇÕES DE ESCRITA ==========
+function openHandwritingModal(questionIndex) {
+    currentHandwritingQuestion = questionIndex;
+    document.getElementById('handwriting-modal').style.display = 'flex';
+    
+    setTimeout(() => {
+        setupCanvas();
+        if (userHandwritings[questionIndex]) {
+            loadHandwritingImage(userHandwritings[questionIndex]);
+        }
+    }, 50);
+}
+
+function setupCanvas() {
+    canvas = document.getElementById('handwriting-canvas');
+    const container = canvas.parentElement;
+    
+    // Configuração HighDPI
+    const scale = window.devicePixelRatio || 1;
+    const width = parseInt(container.offsetWidth);
+    const height = parseInt(container.offsetHeight);
+    
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    
+    ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.scale(scale, scale);
+    
+    // Estilo de escrita
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = currentLineWidth;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    
+    setupPointerEvents();
+    drawGuidelines();
+}
+
+function setupPointerEvents() {
+    canvas.removeEventListener('pointerdown', handlePointerStart);
+    canvas.removeEventListener('pointermove', handlePointerMove);
+    canvas.removeEventListener('pointerup', handlePointerEnd);
+    canvas.removeEventListener('pointercancel', handlePointerEnd);
+    canvas.removeEventListener('pointerleave', handlePointerEnd);
+    
+    // Adiciona eventos com {passive: false} para melhor controle
+    canvas.addEventListener('pointerdown', handlePointerStart, {passive: false});
+    canvas.addEventListener('pointermove', handlePointerMove, {passive: false});
+    canvas.addEventListener('pointerup', handlePointerEnd, {passive: false});
+    canvas.addEventListener('pointercancel', handlePointerEnd, {passive: false});
+    canvas.addEventListener('pointerleave', handlePointerEnd, {passive: false});
+    
+    // Adiciona estilos para evitar seleção de texto
+    canvas.style.touchAction = 'none';
+    canvas.style.userSelect = 'none';
+    canvas.style.webkitUserSelect = 'none';
+    canvas.style.msUserSelect = 'none';
+}
+
+// Adicionar esta função e chamá-la no setupCanvas()
+function optimizeCanvasPerformance() {
+    if (ctx) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+    }
+}
+
+function handlePointerStart(e) {
+    e.preventDefault();
+    
+    if (e.pointerType === 'touch') return;
+    
+    isPenActive = e.pointerType === 'pen' || e.pointerType === 'mouse';
+    
+    const pos = getPosition(e);
+    points = [];
+    points.push({
+        x: pos.x,
+        y: pos.y,
+        pressure: e.pressure || 0.5,
+        time: Date.now()
+    });
+    
+    lastX = pos.x;
+    lastY = pos.y;
+    lastVelocity = 0;
+    lastTime = Date.now();
+    lastWidth = calculateLineWidth(e.pressure || 0.5);
+    
+    isDrawing = true;
+    
+    // Desenha imediatamente um ponto para evitar espaços em branco
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = lastWidth;
+    
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, lastWidth/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    canvas.focus();
+}
+
+function handlePointerMove(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    
+    const pos = getPosition(e);
+    const now = Date.now();
+    
+    // Adiciona ponto atual
+    points.push({
+        x: pos.x,
+        y: pos.y,
+        pressure: e.pressure || 0.5,
+        time: now
+    });
+    
+    // Limita o buffer de pontos para melhor performance
+    if (points.length > 3) {
+        points.shift();
+    }
+    
+    // Desenha imediatamente sem esperar por suavização
+    if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        
+        // Desenha linha reta entre os pontos
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        
+        // Desenha um ponto extra para garantir continuidade
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, currentLineWidth/2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    lastX = pos.x;
+    lastY = pos.y;
+    lastTime = now;
+}
+
+function drawStroke(e) {
+    // Função simplificada para desenho mais responsivo
+    if (!isDrawing) return;
+    
+    const pos = getPosition(e);
+    
+    if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, eraserSize, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+    
+    lastX = pos.x;
+    lastY = pos.y;
+}
+
+function handlePointerEnd(e) {
+    if (!isDrawing) return;
+    
+    // Desenhar os últimos pontos
+    if (points.length > 1 && currentTool !== 'eraser') {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+    }
+    
+    isDrawing = false;
+    isPenActive = false;
+    points = [];
+}
+
+function calculateLineWidth(pressure) {
+    const baseWidth = currentTool === 'eraser' ? eraserSize : currentLineWidth;
+    return baseWidth * (0.5 + Math.min(pressure * 1.5, 1.5)); // Limitar o máximo para evitar linhas muito grossas
+}
+
+function getPosition(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+        x: (e.clientX - rect.left) * scaleX / (window.devicePixelRatio || 1),
+        y: (e.clientY - rect.top) * scaleY / (window.devicePixelRatio || 1)
+    };
+}
+
+function drawGuidelines() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.lineWidth = 1;
+    
+    const lineHeight = 24;
+    for (let y = lineHeight; y < canvas.height; y += lineHeight) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+    
+    ctx.restore();
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGuidelines();
+}
+
+function loadHandwritingImage(dataURL) {
+    const img = new Image();
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = dataURL;
+}
+
+function saveHandwriting() {
+    if (currentHandwritingQuestion >= 0) {
+        userHandwritings[currentHandwritingQuestion] = canvas.toDataURL('image/png');
+        userAnswers[currentHandwritingQuestion] = "Resposta escrita à mão";
+        
+        const handwritingBtn = document.querySelector(`.handwriting-btn`);
+        if (handwritingBtn) {
+            handwritingBtn.classList.add('has-content');
+            handwritingBtn.innerHTML = '✏️ Resposta escrita disponível - Clique para editar';
+        }
+        
+        closeHandwritingModal();
+    }
+}
+
+function closeHandwritingModal() {
+    document.getElementById('handwriting-modal').style.display = 'none';
+    currentHandwritingQuestion = -1;
+}
+
+// ========== FERRAMENTAS ==========
+function setTool(tool) {
+    currentTool = tool;
+    if (tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+    }
+}
+
+function setColor(color) {
+    currentColor = color;
+    ctx.strokeStyle = color;
+}
+
+function setLineWidth(width) {
+    currentLineWidth = width;
+}
+
+function setEraserSize(size) {
+    eraserSize = size;
+}
+
+// ========== FUNÇÕES DE COMPARAÇÃO A CADA 3 PERGUNTAS ==========
+function showReview() {
+    document.getElementById("question-screen").style.display = "none";
+    document.getElementById("review-screen").style.display = "block";
+    
+    const startIdx = Math.floor(currentQuestion / 3) * 3;
+    const endIdx = Math.min(startIdx + 3, questions.length);
+    
+    const reviewContent = document.getElementById("review-content");
+    reviewContent.innerHTML = `
+        <h3>Revisão das Questões ${startIdx + 1} a ${endIdx}</h3>
+        <p>Compare suas respostas com o gabarito oficial:</p>
+    `;
+
+    for (let i = startIdx; i < endIdx; i++) {
+        const question = questions[i];
+        const userAnswer = userAnswers[i] || "(Não respondida)";
+        const userHandwriting = userHandwritings[i];
+        
+        reviewContent.innerHTML += `
+            <div class="review-item">
+                <div class="review-question">
+                    <strong>Questão ${i + 1}:</strong> ${question.text}
+                </div>
+                
+                ${userHandwriting ? `
+                <div class="review-answer handwriting-review">
+                    <strong>Sua Resposta:</strong>
+                    <img src="${userHandwriting}" alt="Resposta escrita à mão">
+                </div>
+                ` : `
+                <div class="review-answer user-answer">
+                    <strong>Sua Resposta:</strong><br>
+                    ${userAnswer}
+                </div>
+                `}
+                
+                <div class="review-answer correct-answer">
+                    <strong>Resposta Correta:</strong><br>
+                    ${question.answer}
+                </div>
+                
+                <div class="answer-feedback">
+                    ${generateFeedback(userAnswer, question.answer)}
+                </div>
+            </div>
+        `;
+    }
+
+    const returnBtn = document.getElementById("return-btn");
+    if (endIdx >= questions.length) {
+        returnBtn.textContent = "Finalizar Prova";
+    } else {
+        returnBtn.textContent = "Continuar para Próximas Questões";
+    }
+}
+
+function generateFeedback(userAnswer, correctAnswer) {
+    if (userAnswer.includes("escrita à mão")) {
+        return `<p class="feedback">Sua resposta foi manuscrita. Compare atentamente com o gabarito.</p>`;
+    }
+    
+    const userKeywords = extractKeywords(userAnswer);
+    const correctKeywords = extractKeywords(correctAnswer);
+    const matchedKeywords = userKeywords.filter(keyword => 
+        correctKeywords.includes(keyword));
+    
+    const score = Math.round((matchedKeywords.length / correctKeywords.length) * 100);
+    
+    return `
+        <div class="progress-container">
+            <div class="progress-bar" style="width: ${score}%"></div>
+        </div>
+        <p class="score">Pontuação: ${score}% de correspondência</p>
+        <p class="feedback">${getFeedbackMessage(score)}</p>
+    `;
+}
+
+function extractKeywords(text) {
+    // Remove pontuação e converte para minúsculas
+    const cleaned = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+    // Pega palavras com mais de 3 letras
+    return cleaned.split(/\s+/).filter(word => word.length > 3);
+}
+
+function getFeedbackMessage(score) {
+    if (score >= 80) return "Excelente! Você acertou a maioria dos pontos importantes.";
+    if (score >= 60) return "Bom trabalho! Você capturou muitos conceitos-chave.";
+    if (score >= 40) return "Razoável. Reveja os tópicos que faltaram.";
+    return "Sua resposta está incompleta. Recomendamos revisar o material.";
+}
+
+function returnToQuiz() {
+    document.getElementById("review-screen").style.display = "none";
+    document.getElementById("question-screen").style.display = "block";
+    
+    // Avança para o próximo bloco de questões
+    currentQuestion = Math.min(
+        Math.ceil(currentQuestion / 3) * 3,
+        questions.length - 1
+    );
+    renderQuestion();
+}
+
+// ========== FUNÇÕES DE NAVEGAÇÃO ==========
+function nextQuestion() {
+    saveCurrentAnswer();
+    answeredQuestions++;
+    
+    // Mostrar revisão a cada 3 questões ou no final
+    if (answeredQuestions % 3 === 0 || currentQuestion === questions.length - 1) {
+        showReview();
+    } else if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+    }
+}
+
+function prevQuestion() {
+    saveCurrentAnswer();
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+    }
+}
+
+function finishQuiz() {
+    saveCurrentAnswer();
+    showReview();
+}
+
+function saveCurrentAnswer() {
+    const textarea = document.getElementById(`answer-${currentQuestion}`);
+    if (textarea) {
+        userAnswers[currentQuestion] = textarea.value;
+    }
+}
+
+// ========== VERIFICAÇÃO DE IP ==========
+function checkIPAuthorization() {
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            if (authorizedIPs.includes(data.ip)) {
+                document.getElementById('main-content').style.display = 'block';
+                initQuiz();
+            } else {
+                showAccessDenied();
+            }
+        })
+        .catch(() => showAccessDenied());
+}
+
+function showAccessDenied() {
+    document.getElementById('access-denied').style.display = 'block';
+    setTimeout(() => {
+        window.location.href = "https://www.youtube.com/shorts/U4jVWdByPFw";
+    }, 3000);
+}
+
+// ========== INICIALIZAÇÃO ==========
+window.onload = checkIPAuthorization;
+
+        // ========== TODAS AS 51 QUESTÕES COMPLETAS ==========
+        const questions = [
+            // QUESTÃO 1
+            {
+                id: 1,
+                text: `(2,0 pontos) 1 - Leia e analise o texto abaixo. Em seguida CITE os achados encontrados na avaliação de estado mental nesse paciente.
+Um jovem de 23 anos veio à consulta acompanhado pela mãe, contra sua vontade porque não acredita que precisa de auxílio médico, encontra-se com roupas rasgadas e sujas com cabelos despenteados e andando de um lado ao outro no consultório durante toda a consulta. Esse jovem logorreico diz: "... eles querem tomar conta da minha alma são invasores da outra dimensão anunciando os tempos do Ulucapatá. Não sabe o que é isso, doutor? É o fim do mundo. As vezes me dizem que o Messias voltará para destruir tudo e eu tenho a missão de ajudar a reconstruir o mundo. Eles querem que o carro verde receba um casal de cada espécie animal para levar à quinta dimensão. Aquela mulher que me trouxe se diz minha mãe, mas é a líder deles e tenho que matá-la. Não acredite nela, doutor!".`,
+                answer: `· Apresentação descuidada (0,1) com higiene precária (0,1)
+· Atitude colaborativa (0,2)
+· Linguagem com neologismo (0,2)
+· Pensamento acelerado (0,1), desagregado (0,1) e conteúdo delirante (0,1) persecutório e místico (0,1)
+· Agitação psicomotora (0,2)
+· Humor eufórico (0,2)
+· Afeto prejudicado (0,2)
+· Sensopercepção com alucinação auditiva (0,2)
+· Crítica ausente (0,2)
+
+Comentário:
+· Apresentação com higiene precária ==> roupas rasgadas e sujas com cabelos despenteados
+· Atitude colaborativa ==> logorreico, ou seja, o texto mostra que fala acelerado e com fluência
+· Linguagem com neologismo ==> Ulucapatá, que para o paciente significa o fim do mundo
+· Pensamento acelerado, desagregado e conteúdo delirante persecutório e místico
+· Agitação psicomotora ==> andando de um lado ao outro no consultório
+· Humor eufórico: logorreico e agitação
+· Afeto prejudicado ==> desejo de matar a mãe
+· Sensopercepção com alucinação auditiva ==> "As vozes me dizem"
+· Crítica ausente ==> não acredita que precisa de auxílio médico`
+            },
+
+            // QUESTÃO 2
+            {
+                id: 2,
+                text: `(1,5 ponto) 2 - Qual a diferença entre vesícula e bolha? Explique.`,
+                answer: `VESÍCULA: elevação circunscrita na pele menor que 1,0 cm com conteúdo líquido claro ou turvo ou rubro. (0,75)
+
+BOLHA ou FLICTEMA: elevação circunscrita na pele maior que 1,0 cm com conteúdo líquido claro ou turvo ou rubro. (0,75)`
+            },
+
+            // QUESTÃO 3
+            {
+                id: 3,
+                text: `(1,5 ponto) 3 - CITE os critérios semiológicos que devem ser pesquisados no reto durante o exame de toque retal.`,
+                answer: `· Consistência mole. (0,4)
+· Vazio ou com fezes (0,4)
+· Pouco móvel (mobilidade) (0,4)
+· Paredes (anteriores, laterais e posteriores) são moles (0,15) e depressíveis. (0,15)`
+            },
+
+            // QUESTÃO 4
+            {
+                id: 4,
+                text: `(1,5 ponto) 4 - CITE as estruturas que são palpadas durante o toque vaginal.`,
+                answer: `· Paredes vaginais (0,3)
+· Fundo de saco do útero (0,3)
+· Colo uterino (0,3)
+· Corpo uterino (0,3)
+· Anexos, quando palpável (0,3)`
+            },
+
+            // QUESTÃO 5 (Repetição da numeração)
+            {
+                id: 5,
+                text: `(1,5 ponto) 3 - Cite os achados semiológicos observados no toque retal num indivíduo com carcinoma de reto.`,
+                answer: `O reto apresenta consistência endurecida (ou pétrea) semelhante a "madeira" (0,5),
+lesões vegetantes (0,5) e
+estreitamento retal (0,5)`
+            },
+
+            // QUESTÃO 6 (Repetição da numeração)
+            {
+                id: 6,
+                text: `(1,5 ponto) 2 - Qual a diferença entre eritema e exantema? Como diferenciar exantema do tipo mobiliforme e escarlatiforme? Explique.`,
+                answer: `ERITEMA: máculas eritematosas de 0,5 cm (roséola) ou de grandes extensões com bordas bem definidas de aspecto figurado. (1,0)
+EXANTEMA: máculas eritematosas de 2 a 3 cm confluentes ou não, acometendo quase toda a superfície da pele. (0,5)
+Pode ser: MOBILIFORME (partes com pele normal) (0,25) ou ESCARLATIFORME (difuso e confluente sem pele normal) (0,25)`
+            },
+
+            // QUESTÃO 7 (Repetição da numeração)
+            {
+                id: 7,
+                text: `(1,5 ponto) 3 - CITE os achados semiológicos encontrados no exame prostático num homem com neoplasia maligna de próstata.`,
+                answer: `Consistência endurecida ou pétrea (0,5)
+Superfície irregular (nódulos laterais e irregulares) (0,5)
+Perda do sulco mediano (0,5)`
+            },
+
+            // QUESTÃO 8
+            {
+                id: 8,
+                text: `(2,0 pontos) 1 - MMR, 56 anos, feminino, comparece à consulta acompanhada do marido, que fica na sala de espera a pedido da paciente, que se mostra ansiosa em iniciar a consulta. Seus antecedentes pessoais incluem etilismo crônico e 3 internações em hospital psiquiátrico. Conta que seu marido sempre a traz porque a vigia 24 horas por dia. Diz que, embora seja aposentado, seu marido é riquíssimo e controla a indústria farmacêutica, alterando os remédios que a obriga a tomar, senão será internada novamente. Ela sabe que não foi internada em um hospital, mas em uma prisão. Ela não é mais doente. Ficou curada do alcoolismo frequentando o AA (Alcoólicos Anônimos). Ela diz: "Ele é muito poderoso controla a Polícia Federal". Conforme prosseguia seu relato, tornava-se cada vez mais nervosa. Então o médico tentou acalmá-la argumentando que os medicamentos são seguros, para não se preocupar, que é importante que mantenha o tratamento etc. Essa atitude, no entanto, a deixou mais exaltada: começou a falar alto e dizer: "Você não acredita em mim! Você não sabe! Ele controla tudo! Até a Policia Federal"!
+Responda:
+
+a) Qual a diferença de alucinação e ilusão?
+b) Como diferenciar ideias delirantes de delirium?
+c) Como está o pensamento do caso relatado acima? Cite dados da anamnese que fundamentam sua afirmação.
+d) Como define o juízo de realidade e a crítica da paciente em relação ao estado mórbido? Cite dados da anamnese que fundamentam sua afirmação.`,
+                answer: `a) ALUCINAÇÃO - ocorre quando há um estímulo de qualquer órgão do sentido sem objeto que o desencadeie. (0,2)
+ILUSÃO - ocorre quando há distorção da percepção do objeto que produziu o estímulo a algum órgão do sentido. (0,2)
+
+b) IDEIAS DELIRANTES - trata-se do conteúdo do pensamento com temática constante (persecutórias, paranoicas, místicas, de grandeza, de fanatismo religioso, hipocondríacas...). (0,2)
+DELIRIUM - é uma alteração no comportamento secundário a um transtorno metabólico ou de outra etiologia orgânica. (0,2)
+
+c) PENSAMENTO: 
+CURSO preservado ==> o texto evidencia uma conversa com velocidade aparentemente normal. (0,2)
+FORMA desagregada ==> "Ela sabe que não foi internada em um hospital, mas em uma prisão." (0,2)
+CONTEÚDO delirante persecutório e grandeza:
+Persecutório ==> "marido sempre a traz porque a vigia 24 horas por dia" (0,1)
+Grandeza ==> "Marido é riquíssimo e controla a indústria farmacêutica / Ele é muito poderoso controla a Polícia Federal" (0,1)
+
+d) JUÍZO DE REALIDADE ==> a paciente perdeu capacidade de julgar os fatos baseado em dados da realidade que é compartilhada pelas pessoas. (0,2)
+CRÍTICA: ausente ==> "Ela não é mais doente", ou seja, a paciente não reconhece que está doente. (0,2)`
+            },
+
+            // QUESTÃO 9
+            {
+                id: 9,
+                text: `(1,5 ponto) 2 - Qual a diferença entre erosão e úlcera? Explique.`,
+                answer: `EROSÃO OU EXULCERAÇÃO OU ESCORIAÇÃO: perda superficial da epiderme. (0,75)
+
+ÚLCERA OU ULCERAÇÃO: perda de solução de continuidade profunda da pele (epiderme e derme) podendo chegar à hipoderme (0,75)`
+            },
+
+            // QUESTÃO 10
+            {
+                id: 10,
+                text: `(1,5 ponto) 3 - CITE os achados semiológicos encontrados no exame prostático num homem com hiperplasia benigna de próstata.`,
+                answer: `Tamanho aumentado (0,3)
+Consistência fibroelástica (0,3)
+Superfície regular (0,3)
+Sulco central acentuado (exagerado) (0,3)
+Indolor (0,3)`
+            },
+
+            // QUESTÃO 11
+            {
+                id: 11,
+                text: `(1,5 ponto) 4 - CITE os critérios semiológicos do conteúdo vaginal que devem ser descritos durante o exame especular.`,
+                answer: `· Quantidade (0,375)
+· Coloração (0,375)
+· Fluidez (0,375)
+· Odor (0,375)`
+            },
+
+            // QUESTÃO 12
+            {
+                id: 12,
+                text: `(2,0 pontos) 1 - Leia e analise o texto abaixo. Em seguida CITE os achados encontrados na avaliação de estado mental nesse paciente.
+Uma mulher de 34 anos acompanhada pelo marido não permite que ele entre no consultório. Durante a consulta ela fala que não precisa de médico, mas veio assim mesmo. Encontra-se bem arrumada com roupas extravagantes e com dificuldade em ficar sentada na cadeira. Essa paciente logorreica diz: "... Doutor eu estou me sentindo tão bem, acho que nunca fui tão feliz, sabe? Se gosto do meu marido? Adoro fazer amor com ele, mas ele diz que sou exagerada, entende? O quê? O doutor me perguntou se eu trabalho? Ah! Eu trabalhava, na verdade trabalhei minha vida inteira, sabe? Mas eu morava em outra cidade e lá era muito calor, então eu não gostava de morar lá. Na verdade, mesmo, 'tô' com vontade de ir pra praia, o senhor nunca foi pra praia doutor? Mas tem que ser uma praia assim, cheia de gente igual a festa, quanto mais gente melhor." O médico tenta novas perguntas, mas uma buzina toca na janela e a paciente fica focada no ruído até ser chamada pelo nome. A partir daí continua a anamnese.`,
+                answer: `· Crítica prejudicada (0,3) ==> "ela fala que não precisa de médico"
+· Higiene preservada (0,3) ==> "bem arrumada com roupas extravagantes"
+· Agitação psicomotora (0,2) ==> "dificuldade em ficar sentada na cadeira"
+· Humor eufórico (0,2) ==> "logorreica / estou me sentindo tão bem"
+· Pragmatismo prejudicado (0,2) ==> "Ah! Eu trabalhava, na verdade trabalhei minha vida inteira, sabe?"
+· Pensamento acelerado (0,2) e desagregado (0,2) com fuga de ideias
+· Atenção espontânea prejudicada (0,2) ==> "buzina toca na janela e a paciente fica focada no ruído"`
+            },
+
+            // QUESTÃO 13
+            {
+                id: 13,
+                text: `(2,0 pontos) 1 - AJ, 68 anos, masculino, comparece à consulta com o filho, que prefere ficar na sala de espera. No geral apresenta-se asseado, adequadamente vestido. Pouco expressivo, fala com voz monótona, gestos limitados e não reage quando o médico tenta ser simpático e animá-lo. Conta que perdeu a vontade de viver desde que sua esposa faleceu em junho de 2019. Mora só, mas seu filho o visita diariamente e cuida de tudo: paga as contas, faz as compras e o leva às consultas médicas. Em sua casa mantém as janelas fechadas, mas o filho insiste em abrir tudo. Fora as idas ao médico, não sai de casa. Aliás, gostaria de nem ter que levantar da cama de manhã, pois diz: "... poderia dormir o dia todo, assim o tempo passaria mais rápido". Sente que é um fardo para o filho, que tem família e outras coisas com que se preocupar. Ele fala: "Não sei por que o Destino levou minha esposa e me deixou aqui. Para quê? Ela fazia tudo, resolvia tudo. Eu que devia ter ido e não ela. Não faço falta e, também, não daria trabalho para os outros". Ele acha que esses remédios antidepressivos não fazem nenhum efeito. Só toma porque o filho insiste.
+
+De acordo com o relato do paciente:
+
+a) Descreva a psicomotricidade e indique os dados da anamnese que justifica sua resposta.
+b) Como está o humor e o pensamento desse paciente? Por quê?
+c) Explique a diferença entre "ideação suicida" e "pensamento de morte" e diga qual deles observa no relato do paciente, utilizando dados da anamnese para justificar a sua resposta.`,
+                answer: `a) PSICOMOTRICIDADE: Lentificado (0,2). Justificativa: "Pouco expressivo, fala com voz monótona, gestos limitados e não reage quando o médico tenta ser simpático e animá-lo." (0,2)
+
+b) HUMOR: Depressivo (0,2). Justificativa: "perdeu a vontade de viver desde que sua esposa faleceu" / "poderia dormir o dia todo" (0,2)
+PENSAMENTO: curso lentificado, forma agregada e conteúdo preservado. (0,2)
+
+c) DIFERENÇA:
+Ideação suicida - planejamento do autoextermínio. (0,2)
+Pensamento de morte - desejo de morrer sem planejamento. (0,2)
+NO CASO: Pensamento de morte (0,2) - "Eu que devia ter ido e não ela. Não faço falta e, também, não daria trabalho para os outros"`
+            },
+
+            // QUESTÃO 14
+            {
+                id: 14,
+                text: `(1,5 ponto) 2 - Qual a diferença entre nódulo e tumor? Explique.`,
+                answer: `NÓDULO: lesão sólida inferior a 3,0 cm localizada na hipoderme, circunscrita, saliente ou não, sendo mais palpável que visível. (0,75)
+
+TUMOR ou NODOSIDADE: lesão sólida superior a 3,0 cm localizada na hipoderme, circunscrita, saliente ou não, sendo mais palpável que visível. (0,75)`
+            },
+
+            // QUESTÃO 15
+            {
+                id: 15,
+                text: `(1,5 ponto) 3 - CITE os achados semiológicos encontrados no exame prostático num homem com próstata normal.`,
+                answer: `· Tamanho (0,3)
+· Consistência (0,3)
+· Superfície (0,3)
+· Sulco mediano (0,3)
+· Dor (0,3)`
+            },
+
+            // QUESTÃO 16
+            {
+                id: 16,
+                text: `(2,0 pontos) 1 - JM, 30 anos, feminino, paciente comparece à consulta acompanhada pela mãe. Asseada e adequadamente vestida, no entanto seus cabelos estão despenteados. Atualmente sente-se muito nervosa, com dificuldade de memória. Demora para iniciar o sono e acorda muitas vezes à noite. Seu trabalho, em um grande banco, é estressante. Tem medo de cometer erros. Só de pensar nisso, seu coração acelera. Durante seu relato agita-se na cadeira, esfrega as mãos, despenteia os cabelos. Fala muito rápido e deixa de responder várias perguntas do médico. Não conclui muitas frases porque os sons vindos de fora do consultório a distraem. Reconhece que sua mãe se esforça, mas não consegue fazê-la se sentir melhor. Apenas chocolate diminui seus sintomas. Chega a comer três barras por dia e mais guloseimas. Sente-se muito doente e precisa de algum remédio para melhorar.
+Baseado nos dados do texto acima, responda:
+a) Como se encontra a velocidade de pensamento dessa paciente? Que dados da entrevista ilustram esse diagnóstico?
+b) Diferencie atenção voluntária e atenção espontânea. CITE dados da anamnese que caracterizam a alteração de atenção da paciente.
+c) Como define a crítica em relação a seu estado mórbido, neste caso?`,
+                answer: `a) Pensamento acelerado. "Fala muito rápido e deixa de responder várias perguntas do médico" (0,5)
+
+b) Atenção voluntária: é a capacidade de concentração (0,25)
+Atenção espontânea: é a atenção que dirigimos ao ambiente e que está fora do controle voluntário. (0,25)
+Texto: "Não conclui muitas frases porque os sons vindos de fora do consultório a distraem" (0,5)
+
+c) Refere-se à capacidade do paciente em entender sua doença. Nesta paciente a crítica está PRESERVADA ("Sente-se muito doente e precisa de algum remédio para melhorar") (0,5)`
+            },
+
+            // QUESTÃO 17
+            {
+                id: 17,
+                text: `(2,0 pontos) 1 - Leia e analise o texto abaixo. Em seguida CITE os achados encontrados na avaliação de estado mental nesse paciente.
+Um engenheiro de 28 anos veio ao pronto-socorro durante a madrugada sem acompanhantes, encontra-se asseado com roupas limpas e cabelos penteados. Queixa de dispneia com sensação de morte iminente há duas horas, após inalar cocaína, e tem medo de ser COVID. Faz uso de etílicos há oito anos, quase que diariamente, e cocaína algumas vezes na semana há quatro anos. Durante a consulta apresenta períodos logorreicos, andando de um lado ao outro no consultório esfregando uma mão na outra persistentemente e outros períodos com fala mais branda conseguindo ficar sentado na cadeira. Quanto a dispneia houve melhora espontânea durante a consulta. O médico explicou sobre os "ditos populares" e perguntou: "Não adianta chorar o leite derramado", o paciente respondeu: "o leite caiu, e aí fica derramado". O paciente encontra dificuldade em fazer contas simples, foi dito três palavras para lembrar depois: casa, vaso e tijolo, no entanto ao ser perguntado posteriormente, responde: "tapete, tijolo e ... ". Nega necessidade de ajuda médica para parar de beber e diz: "Qual o problema? Eu gosto de beber!". O médico tenta novas perguntas, mas uma buzina toca na janela e o paciente fica focado no ruído até ser chamado pelo nome. A partir daí continua a anamnese.`,
+                answer: `· Apresentação cuidado (0,1) com higiene preservada (0,1)
+· Humor disfórico (0,2)
+· Pensamento acelerado (0,2), agregado e conteúdo preservado (0,2)
+· Rendimento intelectual prejudicado (0,2)
+· Atenção voluntária prejudicada (0,2)
+· Atenção espontânea prejudicada (0,2)
+· Memória de fixação prejudicada (0,2)
+· Agitação psicomotora (0,2)
+· Crítica ausente (0,2)
+
+Comentários:
+· Apresentação cuidado com higiene preservado ==> asseado com roupas limpas e cabelos penteados
+· Humor disfórico ==> períodos logorreicos, andando de um lado ao outro
+· Pensamento acelerado, agregado e conteúdo preservado
+· Rendimento intelectual prejudicado ==> resposta ao provérbio
+· Atenção voluntária prejudicada ==> dificuldade em fazer contas simples
+· Atenção espontânea prejudicada ==> focou no ruído da buzina
+· Memória de fixação prejudicada ==> erro nas palavras a lembrar
+· Agitação psicomotora ==> andando de um lado ao outro
+· Crítica ausente ==> nega necessidade de ajuda médica`
+            },
+
+            // QUESTÃO 18
+            {
+                id: 18,
+                text: `(1,5 ponto) 2 - Qual a diferença entre pápula e placa? Explique.`,
+                answer: `PÁPULA: elevação sólida, superficial, circunscrita na pele com diâmetro até 1,0 cm. (0,75)
+
+PLACA: elevação sólida, superficial, circunscrita na pele com diâmetro maior que 1,0 cm. (0,75)`
+            },
+
+            // QUESTÃO 19
+            {
+                id: 19,
+                text: `(1,5 ponto) 3 - CITE os critérios semiológicos que devem ser pesquisados no esfíncter anal durante o exame de toque retal.`,
+                answer: `· Tonicidade: normotônico, hipertônico ou hipotônico (0,3)
+· Elasticidade (0,3)
+· Motricidade ativa (0,3)
+· Dor (0,3)
+· Zona interesfincteriana (de Hilton) (0,3)`
+            },
+
+            // QUESTÃO 20
+            {
+                id: 20,
+                text: `(1,5 ponto) 2 - Qual a diferença entre equimose e hematoma? Explique.`,
+                answer: `HEMATOMA: coleção hemática, circunscrita e relacionada ao trauma, geralmente. (0,75)
+
+EQUIMOSE: máculas em placas acima de 1,0 cm (0,75)`
+            },
+
+            // QUESTÃO 21
+            {
+                id: 21,
+                text: `(4 pontos) 1 - Uma mulher apresenta ciclo hipoespanioligomenorreico. Qual o significado semiológico desse ciclo ovariano? Explique.`,
+                answer: `HIPOESPANIOLIGOMENORREICO = HIPOMENORREIA + ESPANIOMENORREIA + OLIGOMENORREIA (0,4)
+HIPOMENORREIA - diminuição do número de dias (1,2)
+ESPANIOMENORREIA - aumento do intervalo maior que 45 dias (1,2)
+OLIGOMENORREIA - diminuição da quantidade do fluxo (1,2)`
+            },
+
+            // QUESTÃO 22
+            {
+                id: 22,
+                text: `(4 pontos) 2 - Os pais do adolescente João Tenório vieram na consulta porque leram na internet que "o crescimento cessa ao terminar a puberdade". Verdadeiro ou Falso? Explique.`,
+                answer: `FALSO porque a menarca geralmente se dá na fase de desaceleração do estirão puberal ocorrendo crescimento estatural por mais dois a três anos, em geral. (4,0)`
+            },
+
+            // QUESTÃO 23
+            {
+                id: 23,
+                text: `(4 pontos) 5 - No artigo "Sífilis - um panorama geral" postado no Blackboard, descreve claramente as lesões dermatológicas oriundas da referida doença. Pergunta-se: Quais as características semiológicas da lesão sifilítica primária?`,
+                answer: `O CANCRO DURO (OU PROTOSSIFILOMA) (0,8) SURGE NO LOCAL DA INOCULAÇÃO INICIALMENTE UMA PÁPULA DE COR RÓSEA (0,4), QUE EVOLUI PARA UM VERMELHO MAIS INTENSO (0,4) E EXULCERAÇÃO (0,4). EM GERAL É ÚNICO (0,4), INDOLOR (0,4), BORDAS ENDURADAS (0,4), QUE DESCE SUAVEMENTE ATÉ UM FUNDO LISO E LIMPO (0,4), RECOBERTO POR MATERIAL SEROSO. (0,4)`
+            },
+
+            // QUESTÃO 24
+            {
+                id: 24,
+                text: `(4 pontos) 3 - Leia e analise o texto abaixo. Em seguida responda as questões.
+Mulher de 56 anos, durante a consulta, mostra-se exaltada com verborragia e conta que seu marido a vigia 24 horas por dia, controla a indústria farmacêutica porque é riquíssimo e vem alterando os remédios que a obriga a tomar. Ela diz: "Ele é muito poderoso controla até Governo Federal". Conforme prosseguia seu relato, tornava-se cada vez mais exaltada e começou a falar alto: "o remédio dele faz eu correr azul, sabe? Estou cansada de fugir dele na praia, eu só vou nas festas quando não tem ninguém do Governo, estão sempre me vigiando. Andando de um lado ao outro, dizia: "Ele me persegue e que me envenenar, mas antes vou me enforcar ... assim fujo dele. Penso nisso todos os dias."
+
+a) Como está o humor? Justifique relacionando com o trecho do texto.
+b) Como está a forma e o conteúdo do pensamento? Justifique relacionando com o trecho do texto.
+c) Há ideação suicida ou pensamento de morte? Como diferenciar? Justifique relacionando com o trecho do texto.`,
+                answer: `a) HUMOR EUFÓRICO (ou HIPERTÍMICO) (1,0) - ... mostra-se exaltada com verborragia e ... // ... tornava-se cada vez mais exaltada e começou a falar alto. (1,0)
+
+b) FORMA DESAGREGADA (0,4) COM SALADA DE PALAVRAS (0,4)
+- o remédio dele faz eu correr azul, sabe? Estou cansada de fugir dele na praia, eu só vou nas festas quando não tem ninguém do Governo, estão sempre me vigiando (0,2)
+
+CONTEÚDO DELIRANTE (0,4) PERSECUTÓRIO. (0,4) - seu marido a vigia 24 horas por dia, controla a indústria farmacêutica porque é riquíssimo e vem alterando os remédios que a obriga a tomar. (0,2)
+
+c) · O PENSAMENTO DE MORTE O PACIENTE DESEJA MORRER, MAS NÃO PLANEJA SUA MORTE (1,0), NO ENTANTO A IDEAÇÃO SUICIDA O PACIENTE PLANEJA, ÀS VEZES COM DETALHES, SEU AUTOEXTERMÍNIO. (1,0)
+· JUSTIFICATIVA NO TEXTO: Ele me persegue e que me envenenar, mas antes vou me enforcar ... assim fujo dele. Penso nisso todos os dias." (1,0)
+
+· HÁ IDEAÇÃO SUICIDA (1,0)`
+            },
+
+            // QUESTÃO 25
+            {
+                id: 25,
+                text: `(2,0 pontos) 2 - Leia e analise o texto abaixo.
+Mulher de 56 anos que durante a consulta mostra-se logorreica e exaltada conta que seu marido a vigia 24 horas por dia, embora seja aposentado, ele é riquíssimo e controla a indústria farmacêutica, alterando os remédios que a obriga a tomar. Ela diz: "Ele é muito poderoso controla a Polícia Federal". Conforme prosseguia seu relato, tornava-se cada vez mais exaltada e começou a falar alto: "Você não acredita em mim! Você não sabe! Ele controla tudo! Até a Polícia Federal." Andando de um lado ao outro, dizia: "Ele quer me matar com remédios, me deixar presa, me reduzir ... "
+Responda: A) Correlacione o trecho do texto que expressa as características semiológicas encontradas na avaliação de estado mental nessa paciente; B) Como estão o juízo de realidade e a crítica dessa paciente? Explique.`,
+                answer: `A-
+PENSAMENTO COM CURSO ACELERADO (0,2) - logorreica (0,1)
+FORMA DESAGREGADA (0,1) - ele é riquíssimo e controla a indústria farmacêutica, alterando os remédios que a obriga a tomar ... (0,1)
+CONTEÚDO PARANOICO ou DELIRANTE PERSECUTÓRIO (0,2) - marido a vigia 24h por dia, ... Ele quer me matar com remédios (0,1)
+
+HUMOR EUFÓRICO (0,2)- logorreica e exaltada ... cada vez mais exaltada (0,1)
+
+AGITAÇÃO PSICOMOTORA (0,2)- Andando de um lado ao outro ... (0,1)
+
+B- Juízo de realidade prejudicado (0,2) devido pensamento de conteúdo paranoico e delirante (0,1) e crítica ausente (0,2), pois a paciente diz: "os remédios que a obriga a tomar" (0,1)`
+            },
+
+            // QUESTÃO 26
+            {
+                id: 26,
+                text: `(1,5 ponto) 1 - A Sra Renata tem um casal de gêmeos na adolescência e percebeu que um deles cresce mais rápido que o outro. Pergunta-se: Quando ocorre o estirão de crescimento em meninas e meninos? Explique.`,
+                answer: `Resposta oficial: A velocidade de crescimento é relacionada com a escala de Tanner (0,1), sendo nas meninas o pico da velocidade de crescimento ocorre em M3 (0,7) e nos meninos em G4 (0,7)`
+            },
+
+            // QUESTÃO 27
+            {
+                id: 27,
+                text: `(1,5 ponto) 4 - Cite os achados semiológicos observados no toque retal num indivíduo com carcinoma de reto.`,
+                answer: `O reto apresenta perda da mobilidade (0,3), consistência de "madeira" (0,4), lesões vegetantes (0,4) e estreitamento retal (0,4).`
+            },
+
+            // QUESTÃO 28
+            {
+                id: 28,
+                text: `(1,5 ponto) 5 - O que é fimose? Por que o "grau 3" pode se tornar uma emergência urológica?`,
+                answer: `Fimose é a presença de um anel fibroso no prepúcio que impede a exteriorização da glande. (0,5)
+No grau 3 há exteriorização de toda a glande com anel de constrição no corpo do pênis impedindo que o prepúcio retorne à sua posição original seguido de edema da glande e do prepúcio. (0,5) Denomina-se PARAFIMOSE que é uma emergência médica (0,5)`
+            },
+
+            // QUESTÃO 29
+            {
+                id: 29,
+                text: `(1,5 ponto) 6 - No artigo "Sífilis - um panorama geral" postado no Blackboard, descreve que a fase secundária ocorre por surtos e de forma simétrica. Pergunta-se: A) Como são essas lesões na pele? B) Quais as características do conhecido "colarete de Biett" da fase secundária?`,
+                answer: `A) Lesões sob a forma de máculas de cor eritematosa (roséola sifilítica). (0,75)
+
+B) Colarete de Biett --- > lesões papulosas (0,15) eritêmato-acobreadas (0,15), arredondadas (0,15), de superfície plana (0,15), recobertas por escamas (0,15)`
+            },
+
+            // QUESTÃO 30
+            {
+                id: 30,
+                text: `(1,0 ponto) 1 - A mãe de Roberto (12 anos) e Elisa (13 anos) trouxe em consulta médica porque quer saber se seus filhos iniciaram a puberdade. Pergunta-se: É possível perceber o início da puberdade nos meninos e nas meninas pelo exame físico? Explique comparativamente.`,
+                answer: `SIM (0,3), porque se nos meninos nota-se o aumento do testículo ao exame físico que passa a ter aproximadamente 3,0 cm no maior diâmetro (4mL) (0,6); e nas meninas inicia com o aparecimento do broto mamário. (0,6)`
+            },
+
+            // QUESTÃO 31
+            {
+                id: 31,
+                text: `(4 pontos) 9 - Cite os achados semiológicos encontrados no exame prostático num homem com próstata normal.`,
+                answer: `PRÓSTATA DE TAMANHO PRESERVADO (1,0), CONSISTÊNCIA FIBROELÁSTICA (1,0), INDOLOR (1,0) E SULCO CENTRAL PRESERVADO (1,0)`
+            },
+
+            // QUESTÃO 32
+            {
+                id: 32,
+                text: `(2,0 pontos) 3 - Qual a diferença entre pápula e placa? Explique.`,
+                answer: `PÁPULA: elevação sólida, superficial, circunscrita a pele com diâmetro até 1,0 cm. (1,0)
+PLACA: elevação sólida, superficial, circunscrita a pele com diâmetro maior que 1,0 cm. (1,0)`
+            },
+
+            // QUESTÃO 33
+            {
+                id: 33,
+                text: `(1,5 ponto) 4 - Cite os achados semiológicos encontrados no exame prostático num homem com próstata normal.`,
+                answer: `A próstata de tamanho de 2 a 3 cm de diâmetro (0,4), consistência fibroelástica (0,4), presença do sulco central (0,4) e indolor (0,3).`
+            },
+
+            // QUESTÃO 34
+            {
+                id: 34,
+                text: `(1,5 ponto) 5 - Qual a diferença do reflexo cremastérico e o sinal de Prehn? Explique.`,
+                answer: `O reflexo cremastérico é a contração do músculo cremáster com elevação do testículo após estímulo (0,6), por exemplo: a queda de temperatura, ato sexual ou estímulo mecânico na face medial da coxa. (0,2)
+O Sinal de Prehn é alívio de quadro doloroso ao elevar a bolsa testicular do lado afetado (0,6), por exemplo varicocele. (0,1)`
+            },
+
+            // QUESTÃO 35
+            {
+                id: 35,
+                text: `(1,5 pontos) 1 - Os pais do adolescente Vicente vieram na consulta porque leram na internet que "o crescimento cessa ao terminar a puberdade". Verdadeiro ou Falso? Explique.`,
+                answer: `FALSO (0,3) porque ao terminar o desenvolvimento dos caracteres sexuais secundários ainda está na fase de desaceleração do crescimento (0,6), podendo ocorrer crescimento nas meninas até os 18 anos e nos meninos até 21 anos. (0,6)`
+            },
+
+            // QUESTÃO 36
+            {
+                id: 36,
+                text: `(1,5 ponto) 6 - No artigo "Sífilis - um panorama geral" postado no Blackboard, descreve claramente as lesões dermatológicas oriundas da referida doença. Pergunta-se: Quais as características semiológicas das lesões que determinam a "sífilis maligna precoce"? E em qual fase da doença aparecem essas lesões.`,
+                answer: `São lesões pápulo-pustulosas (0,6) que evoluem rapidamente para necrose (0,3) e ulceração (0,3), apresentando crostas (0,3)`
+            },
+
+            // QUESTÃO 37 (repetida)
+            {
+                id: 37,
+                text: `(1,5 pontos) 1 - Os pais do adolescente Vicente vieram na consulta porque leram na internet que "o crescimento cessa ao terminar a puberdade". Verdadeiro ou Falso? Explique.`,
+                answer: `FALSO (0,3) porque ao terminar o desenvolvimento dos caracteres sexuais secundários ainda está na fase de desaceleração do crescimento (0,6), podendo ocorrer crescimento nas meninas até os 18 anos e nos meninos até 21 anos. (0,6)`
+            },
+
+            // QUESTÃO 38
+            {
+                id: 38,
+                text: `2 - Leia e analise o texto abaixo. Em seguida correlacione o trecho do texto que expressa as características semiológicas encontradas na avaliação de estado mental nesse paciente.
+Uma jovem de 28 anos encontra-se asseada com roupas limpas e cabelos penteados, mostra-se na consulta logorreica, andando de um lado ao outro no consultório esfregando uma mão na outra persistentemente. O médico explicou sobre os "ditos populares" e perguntou: "Não adianta chorar o leite derramado", o paciente respondeu: "o leite caiu, e aí fica derramado". A paciente encontra dificuldade em fazer contas simples e ao bater a janela a paciente fica focada no ruído até ser chamada pelo nome. A partir daí continua a anamnese.`,
+                answer: `1 - APRESENTAÇÃO (0,2) - asseada com roupas limpas e cabelos penteados (0,2)
+2 - AGITAÇÃO PSICOMOTORA (0,2) - andando de um lado ao outro no consultório esfregando uma mão na outra persistentemente (0,2)
+3 - RENDIMENTO INTELECTUAL PREJUDICADO (0,2) --- > não consegue interpretar um provérbio simples, "o leite caiu, e aí fica derramado" (0,2)
+4 - ATENÇÃO VOLUNTÁRIA PREJUDICADA (0,2) --- > dificuldade em fazer contas simples (0,2)
+5 - MEMÓRIA ESPONTÂNEA PREJUDICADA (0,2) --- > ao bater a janela o paciente fica focada no ruído até ser chamada pelo nome (0,2)
+=== > ponto extra: logorreico - pensamento acelerado ou humor eufórico (+0,2)`
+            },
+
+            // QUESTÃO 39
+            {
+                id: 39,
+                text: `3 - Qual a diferença entre equimose e hematoma? Explique.`,
+                answer: `HEMATOMA: coleção hemática, circunscrita e relacionado ao trauma, geralmente. (0,75)
+EQUIMOSE: máculas em placas acima de 1,0 cm (0,75)`
+            },
+
+            // QUESTÃO 40
+            {
+                id: 40,
+                text: `4 - Cite os critérios semiológicos a serem pesquisados no esfíncter anal no exame de toque retal.`,
+                answer: `Tonicidade (normotônico, hipertônico ou hipotônico) (0,3)
+Elasticidade (0,3)
+Motricidade ativa (0,3)
+Dor (0,3)
+Zona interesfincteriana (ou zona de Hilton) (0,3)`
+            },
+
+            // QUESTÃO 41
+            {
+                id: 41,
+                text: `5 - Um homem portador de linfogranuloma, doença causada pela Clamidia sp, apresenta lesões características no pênis e nos linfonodos inguinais. CITE as características semiológicas de um linfonodo inguinal inflamatório.`,
+                answer: `Quando visível na inspeção observa-se aumento do volume (0,1), simétrico ou assimétrico (0,1) e abaulamento na pele. (0,1). Na palpação deve-se identificar o número (0,1), tamanho (0,1), consistência mole (0,2), sem coalescência (0,2), limite precisos (0,2), mobilidade móvel (0,2) e doloroso (0,2)`
+            },
+
+            // QUESTÃO 42
+            {
+                id: 42,
+                text: `6- Qual o tipo de hímen que tem grande relevância semiológica durante a inspeção do genital externo feminino por ser considerado uma alteração de futuras repercussões clínicas? Explique.`,
+                answer: `Hímen imperfurado (0,6) porque na menarca não acontecerá a saída do fluxo menstrual (0,6), conhecido como hematocolpo. (0,3)`
+            },
+
+            // QUESTÕES SEM RESPOSTA (43-51)
+            {
+                id: 43,
+                text: `1. RM, 20 anos, masculino. Trazido pela mãe. Seus cabelos e barba estão mal-cortados, suas roupas são gastas e mostram sinais de pouco asseio, exalando odor de tabaco crônico. Na consulta mostra-se inquieto. Desconfiado. Recusa-se a ficar sentado na cadeira, vai até a janela e permanece nesse local. Olha para os objetos da mesa: estetoscópio e canetas e diz que tem medo dessas cobras. Elas vão pular nele. Grita com a mãe e pergunta por que ela o trouxe para essa jaula? Fala palavrões. Ainda gritando, diz que é nessa jaula que as pessoas entram na sua cabeça!
+Responda como se encontram os seguintes itens justificando com elementos do relato de caso acima (2,0 pontos)
+a) Atitude:
+b) Curso e conteúdo do pensamento:
+c) Sensopercepção:
+d) Psicomotricidade:`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 44,
+                text: `2. Qual é a diferença entre o estirão do crescimento das meninos e das meninas?`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 45,
+                text: `3. Em uma anamnese, a investigação dos antecedentes familiares pode trazer informações importantes para a detecção e prevenção de riscos e vulnerabilidades. Cite um antecedente familiar que considera importante na anamnese da mulher e explique. (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 46,
+                text: `4. A qual grupo de lesões elementares pertencem as EQUIMOSES? Quais as características dessa lesão? (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 47,
+                text: `5. Descreva como se apresentam as características dos ciclos menstruais abaixo: (1,0 ponto)
+a) Hipoespaniomenorreia
+b) Hipermenorragia`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 48,
+                text: `6. Quais são as características do FECALOMA ao toque proctológico? (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 49,
+                text: `7. O que é PARAFIMOSE? Qual a sua importância clínica? (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 50,
+                text: `8. O exame de toque proctológico deve explorar toda a circunferência interna das paredes. Para isso, deve-se rodar o dedo indicador duas vezes. Explique por quê. (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            },
+
+            {
+                id: 51,
+                text: `9. Quais as características semiológicas da lesão sifilítica primária? (1,0 ponto)`,
+                answer: "Sem resposta fornecida"
+            }
+        ];
+
+
+</script>
+</body>
+</html>
