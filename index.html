@@ -18,44 +18,50 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Portal de Provas Médicas</h1>
-            <button class="dark-mode-toggle" id="darkModeToggle">
-                <span id="darkModeIcon">🌙</span>
-                <span>Modo Escuro</span>
+        <header class="header">
+            <h1 class="header__title">Portal de Provas Médicas</h1>
+            <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Alternar modo escuro">
+                <span id="darkModeIcon" aria-hidden="true">🌙</span>
+                <span class="dark-mode-toggle__text">Modo Escuro</span>
             </button>
         </header>
 
-        <main>
+        <main class="main-content">
             <div class="disciplines-grid">
-                <div class="discipline-card" onclick="location.href='semiologia.html'">
-                    <h2>Semiologia</h2>
-                </div>
+                <!-- Botão 1 -->
+                <button class="discipline-card" onclick="window.location.href='semiologia.html'">
+                    <h2 class="discipline-card__title">Semiologia</h2>
+                </button>
 
-                <div class="discipline-card" onclick="location.href='tutoria.html'">
-                    <h2>Tutoria</h2>
-                </div>
+                <!-- Botão 2 -->
+                <button class="discipline-card" onclick="window.location.href='tutoria.html'">
+                    <h2 class="discipline-card__title">Tutoria</h2>
+                </button>
 
-                <div class="discipline-card" onclick="location.href='morfo.html'">
-                    <h2>Morfo</h2>
-                </div>
+                <!-- Botão 3 -->
+                <button class="discipline-card" onclick="window.location.href='morfo.html'">
+                    <h2 class="discipline-card__title">Morfo</h2>
+                </button>
 
-                <div class="discipline-card" onclick="location.href='farmaco.html'">
-                    <h2>Farmaco</h2>
-                </div>
+                <!-- Botão 4 -->
+                <button class="discipline-card" onclick="window.location.href='farmaco.html'">
+                    <h2 class="discipline-card__title">Farmaco</h2>
+                </button>
 
-                <div class="discipline-card" onclick="location.href='epidemio.html'">
-                    <h2>Epidemio</h2>
-                </div>
+                <!-- Botão 5 -->
+                <button class="discipline-card" onclick="window.location.href='epidemio.html'">
+                    <h2 class="discipline-card__title">Epidemio</h2>
+                </button>
 
-                <div class="discipline-card" onclick="location.href='aps.html'">
-                    <h2>APS</h2>
-                </div>
+                <!-- Botão 6 -->
+                <button class="discipline-card" onclick="window.location.href='aps.html'">
+                    <h2 class="discipline-card__title">APS</h2>
+                </button>
             </div>
         </main>
 
-        <footer>
-            <p>© 2025 Portal de Provas  - Desenvolvido para estudo</p>
+        <footer class="footer">
+            <p class="footer__text">© <span id="current-year">2023</span> Portal de Provas Médicas - Desenvolvido para estudo</p>
         </footer>
     </div>
 
@@ -63,6 +69,9 @@
         // Elementos DOM
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
+        
+        // Atualiza o ano automaticamente
+        document.getElementById('current-year').textContent = new Date().getFullYear();
 
         // Alternar modo escuro/claro
         function toggleDarkMode() {
@@ -70,16 +79,19 @@
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
             darkModeIcon.textContent = isDark ? '☀️' : '🌙';
+            darkModeToggle.querySelector('.dark-mode-toggle__text').textContent = isDark ? 'Modo Claro' : 'Modo Escuro';
         }
 
         // Verificar modo escuro no carregamento
         if (localStorage.getItem('darkMode') === 'enabled') {
             document.body.classList.add('dark-mode');
             darkModeIcon.textContent = '☀️';
+            darkModeToggle.querySelector('.dark-mode-toggle__text').textContent = 'Modo Claro';
         }
 
         // Event listener para o botão de modo escuro
         darkModeToggle.addEventListener('click', toggleDarkMode);
     </script>
 </body>
+</html>
 </html>
