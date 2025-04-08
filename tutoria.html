@@ -769,150 +769,158 @@
                 document.querySelector('#areasChart').closest('.stat-card').style.display = 'none';
             }
             
-            // Gráfico de erros por questão
-            const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
-            const mistakesData = countMistakesByQuestion();
-            
-            charts.mistakes = new Chart(mistakesCtx, {
-                type: 'bar',
-                data: {
-                    labels: mistakesData.labels,
-                    datasets: [{
-                        label: 'Vezes errada',
-                        data: mistakesData.values,
-                        backgroundColor: incorrectColor,
-                        borderColor: borderColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Questões com Erros', textColor, {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 20,
-                            ticks: { color: textColor, stepSize: 1 },
-                            grid: { color: borderColor }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                afterLabel: function(context) {
-                                    const qIndex = mistakesData.questions[context.dataIndex];
-                                    const question = currentTestQuestions[qIndex];
-                                    return `Resposta correta: ${question.correta.toUpperCase()}`;
-                                }
-                            }
-                        }
-                    }
-                })
-            });
-        }
-
-        // Gerar gráficos adicionais
-        function generateAdditionalCharts() {
-            // Obter cores do CSS
-            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
-            const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-
-            // Gráfico de distribuição de dificuldade (simulado)
-            const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
-            charts.difficulty = new Chart(difficultyCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fácil', 'Médio', 'Difícil'],
-                    datasets: [{
-                        data: [15, 15, 10], // Valores simulados
-                        backgroundColor: [
-                            '#2ecc71', // Verde
-                            '#f39c12', // Amarelo/laranja
-                            '#e74c3c'  // Vermelho
-                        ],
-                        borderColor: borderColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Distribuição de Dificuldade', textColor)
-            });
-
-            // Gráfico de tempo por questão (simulado)
-            const timeCtx = document.getElementById('timePerQuestionChart').getContext('2d');
-            const timeLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const timeData = Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30); // Tempos aleatórios entre 30-150s
-            
-            charts.timePerQuestion = new Chart(timeCtx, {
-                type: 'bar',
-                data: {
-                    labels: timeLabels.slice(0, 10), // Mostrar apenas as primeiras 10 para legibilidade
-                    datasets: [{
-                        label: 'Tempo (segundos)',
-                        data: timeData.slice(0, 10),
-                        backgroundColor: primaryColor,
-                        borderColor: borderColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Tempo por Questão', textColor, {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        }
-                    }
-                })
-            });
-
-            // Gráfico de evolução do desempenho
-            const evolutionCtx = document.getElementById('performanceEvolutionChart').getContext('2d');
-            const evolutionLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const evolutionData = [];
-            let correctCount = 0;
-            
-            for (let i = 0; i < currentTestQuestions.length; i++) {
-                if (userAnswers[i] === currentTestQuestions[i].correta) {
-                    correctCount++;
+// ============= GRÁFICO DE ERROS POR QUESTÃO =============
+function generateMistakesChart() {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+    const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
+    
+    const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
+    const mistakesData = countMistakesByQuestion();
+    
+    charts.mistakes = new Chart(mistakesCtx, {
+        type: 'bar',
+        data: {
+            labels: mistakesData.labels,
+            datasets: [{
+                label: 'Vezes errada',
+                data: mistakesData.values,
+                backgroundColor: incorrectColor,
+                borderColor: borderColor,
+                borderWidth: 1
+            }]
+        },
+        options: getChartOptions('Questões com Erros', textColor, {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 20,
+                    ticks: { color: textColor, stepSize: 1 },
+                    grid: { color: borderColor }
                 }
-                evolutionData.push((correctCount / (i + 1)) * 100);
-            }
-            
-            charts.performanceEvolution = new Chart(evolutionCtx, {
-                type: 'line',
-                data: {
-                    labels: evolutionLabels,
-                    datasets: [{
-                        label: 'Taxa de Acertos (%)',
-                        data: evolutionData,
-                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        borderColor: correctColor,
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
-                    }]
-                },
-                options: getChartOptions('Evolução do Desempenho', textColor, {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const qIndex = mistakesData.questions[context.dataIndex];
+                            const question = currentTestQuestions[qIndex];
+                            return `Resposta correta: ${question.correta.toUpperCase()}`;
                         }
                     }
-                })
-            });
+                }
+            }
+        })
+    });
+}
+
+// ============= GRÁFICO DE DIFICULDADE =============
+function generateDifficultyChart() {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+    
+    const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
+    charts.difficulty = new Chart(difficultyCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Fácil', 'Médio', 'Difícil'],
+            datasets: [{
+                data: [15, 15, 10],
+                backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
+                borderColor: borderColor,
+                borderWidth: 1
+            }]
+        },
+        options: getChartOptions('Distribuição de Dificuldade', textColor)
+    });
+}
+
+// ============= GRÁFICO DE TEMPO POR QUESTÃO =============
+function generateTimePerQuestionChart() {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
+    
+    const timeCtx = document.getElementById('timePerQuestionChart').getContext('2d');
+    const timeLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
+    const timeData = Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30);
+    
+    charts.timePerQuestion = new Chart(timeCtx, {
+        type: 'bar',
+        data: {
+            labels: timeLabels.slice(0, 10),
+            datasets: [{
+                label: 'Tempo (segundos)',
+                data: timeData.slice(0, 10),
+                backgroundColor: primaryColor,
+                borderColor: borderColor,
+                borderWidth: 1
+            }]
+        },
+        options: getChartOptions('Tempo por Questão', textColor, {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: textColor },
+                    grid: { color: borderColor }
+                },
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: borderColor }
+                }
+            }
+        })
+    });
+}
+
+// ============= GRÁFICO DE EVOLUÇÃO =============
+function generatePerformanceEvolutionChart() {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+    const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
+    
+    const evolutionCtx = document.getElementById('performanceEvolutionChart').getContext('2d');
+    const evolutionLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
+    const evolutionData = [];
+    let correctCount = 0;
+    
+    for (let i = 0; i < currentTestQuestions.length; i++) {
+        if (userAnswers[i] === currentTestQuestions[i].correta) {
+            correctCount++;
         }
+        evolutionData.push((correctCount / (i + 1)) * 100);
+    }
+    
+    charts.performanceEvolution = new Chart(evolutionCtx, {
+        type: 'line',
+        data: {
+            labels: evolutionLabels,
+            datasets: [{
+                label: 'Taxa de Acertos (%)',
+                data: evolutionData,
+                backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                borderColor: correctColor,
+                borderWidth: 2,
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: getChartOptions('Evolução do Desempenho', textColor, {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: textColor },
+                    grid: { color: borderColor }
+                },
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: borderColor }
+                }
+            }
+        })
+    });
+}
 
         // Contar erros por questão em todas as tentativas
         function countMistakesByQuestion() {
