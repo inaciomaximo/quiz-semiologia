@@ -337,25 +337,13 @@
 
         }
 
-.back-button {
-    display: inline-block;
-    padding: 12px 24px;
-    background-color: var(--primary);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-main);
-    font-size: 1rem;
-    transition: var(--transition);
-    margin: 20px 0;
+.btn.back-button {
+    background-color: #3498db;
+    margin-top: 20px;
 }
 
-.back-button:hover {
-    background-color: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+.btn.back-button:hover {
+    background-color: #2980b9;
 }
 </style>
 
@@ -428,13 +416,14 @@
 <div class="container">
         <!-- Conteúdo da prova -->
         
-        <!-- Botão de voltar no final -->
-        <div class="navigation">
-            <button onclick="window.location.href='index.html'" class="back-button">
+
+        <!-- Botão de voltar adicionado dentro do container principal -->
+        <div class="navigation" style="margin-top: 30px;">
+            <button onclick="window.location.href='index.html'" class="btn btn-next">
                 Voltar para Página Inicial
             </button>
         </div>
-    </div>
+        
 
 <script>
 // ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
