@@ -312,6 +312,8 @@
     .modal-header h3 {
         pointer-events: none;
     }
+
+
     
     @media (max-width: 600px) {
             .container {
@@ -334,6 +336,27 @@
             }    
 
         }
+
+.back-button {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    transition: var(--transition);
+    margin: 20px 0;
+}
+
+.back-button:hover {
+    background-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
 </style>
 
 </head>
@@ -401,6 +424,17 @@
         </div>
     </div>
 </div>
+
+<div class="container">
+        <!-- Conteúdo da prova -->
+        
+        <!-- Botão de voltar no final -->
+        <div class="navigation">
+            <button onclick="window.location.href='index.html'" class="back-button">
+                Voltar para Página Inicial
+            </button>
+        </div>
+    </div>
 
 <script>
 // ========== CONFIGURAÇÃO DE IPs AUTORIZADOS ==========
