@@ -158,13 +158,13 @@
             incorrect: [],
             attemptsHistory: [],
             performanceByArea: {},
-            questionMistakes: {} // Rastrear erros por questão
+            questionMistakes: {}
         };
         let answeredQuestions = 0;
         let answeredInBlock = 0;
         let correctInBlock = 0;
         let showFeedbackOnNext = false;
-        let currentAttempt = 0; // Contador de tentativas
+        let currentAttempt = 0;
         let charts = {
             performance: null,
             progress: null,
@@ -196,8 +196,6 @@
         const feedbackIncorrect = document.getElementById('feedbackIncorrect');
         const feedbackPercentage = document.getElementById('feedbackPercentage');
         const feedbackMistakes = document.getElementById('feedbackMistakes');
-
-        // Modo Noturno
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
         const darkModeToggleResults = document.getElementById('darkModeToggleResults');
@@ -212,7 +210,9 @@
             darkModeIconResults.textContent = isDark ? '☀️' : '🌙';
             
             if (resultsPage.style.display === 'block') {
-                updateCharts();
+                destroyCharts();
+                generateCharts();
+                generateAdditionalCharts();
             }
         }
 
@@ -223,16 +223,13 @@
             darkModeIconResults.textContent = '☀️';
         }
 
-        // Event listeners para os botões de modo escuro
+        // Event listeners
         darkModeToggle.addEventListener('click', toggleDarkMode);
         darkModeToggleResults.addEventListener('click', toggleDarkMode);
+        closeFeedback.addEventListener('click', () => feedbackPopup.classList.remove('active'));
+        continueButton.addEventListener('click', continueToNextQuestion);
 
-        // Fechar popup de feedback
-        closeFeedback.addEventListener('click', () => {
-            feedbackPopup.classList.remove('active');
-        });
-
-        continueButton.addEventListener('click', () => {
+        function continueToNextQuestion() {
             feedbackPopup.classList.remove('active');
             if (currentQuestionIndex < currentTestQuestions.length - 1) {
                 currentQuestionIndex++;
@@ -240,9 +237,9 @@
                 instantFeedback.style.display = 'none';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        });
+        }
 
-        // Carregar arquivo JSON com as questões
+        // Carregar arquivo JSON
         jsonInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -258,12 +255,10 @@
                         throw new Error('O arquivo JSON não contém questões válidas.');
                     }
                     
-                    // Inicializar contagem de erros para cada questão
                     allQuestions.forEach((q, index) => {
-                        testStatistics.questionMistakes[index] = 0;
+                        testStatistics.questionMistakes[index] = testStatistics.questionMistakes[index] || 0;
                     });
                     
-                    // Carregar histórico se existir
                     const savedHistory = localStorage.getItem('testHistory');
                     if (savedHistory) {
                         const history = JSON.parse(savedHistory);
@@ -298,63 +293,44 @@
             testStatistics.incorrect = [];
             testStatistics.performanceByArea = {};
             
-            // Incrementar contador de tentativas
             currentAttempt++;
             
-            // Selecionar questões conforme o ciclo
             if (currentAttempt % 6 === 0) {
-                // 6ª prova (questões mais erradas)
                 currentTestQuestions = getMostMistakenQuestions(allQuestions, 40);
             } else {
-                // Provas 1-5 (questões aleatórias sem repetição)
                 currentTestQuestions = getRandomQuestions(allQuestions, 40);
             }
             
-            // Mostrar página do quiz
             quizPage.style.display = 'block';
             resultsPage.style.display = 'none';
-            
             displayCurrentQuestion();
             updateProgressBar();
         }
 
-        // Obter questões aleatórias sem repetição na mesma prova
         function getRandomQuestions(questions, count) {
-            // Filtrar questões não usadas ainda nesta prova
-            const availableQuestions = questions.filter((q, index) => 
-                !currentTestQuestions.some(qt => qt.id === q.id)
-            );
+            const uniqueQuestions = [...new Map(questions.map(q => [q.id, q])].map(([_, q]) => q);
             
-            // Se não houver questões suficientes, reiniciar o pool
-            if (availableQuestions.length < count) {
-                const shuffled = [...questions].sort(() => 0.5 - Math.random());
-                return shuffled.slice(0, count);
+            if (uniqueQuestions.length < count) {
+                alert(`Atenção: Há apenas ${uniqueQuestions.length} questões únicas disponíveis.`);
+                count = uniqueQuestions.length;
             }
             
-            const shuffled = [...availableQuestions].sort(() => 0.5 - Math.random());
+            const shuffled = [...uniqueQuestions].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, count);
         }
 
-        // Obter questões mais erradas pelo usuário
         function getMostMistakenQuestions(questions, count) {
-            // Criar array de questões com contagem de erros
             const questionsWithMistakes = questions.map((q, index) => ({
                 ...q,
                 index,
                 mistakes: testStatistics.questionMistakes[index] || 0
             }));
             
-            // Ordenar por número de erros (decrescente)
             questionsWithMistakes.sort((a, b) => b.mistakes - a.mistakes);
-            
-            // Pegar as 'count' mais erradas
             const mostMistaken = questionsWithMistakes.slice(0, count);
             
-            // Ordenar aleatoriamente as que tem o mesmo número de erros
             return mostMistaken.sort((a, b) => {
-                if (a.mistakes === b.mistakes) {
-                    return 0.5 - Math.random();
-                }
+                if (a.mistakes === b.mistakes) return 0.5 - Math.random();
                 return 0;
             });
         }
@@ -378,7 +354,6 @@
             const explanationDiv = document.getElementById('explanation');
             const questionContainer = document.getElementById('questionContainer');
             
-            // Adicionar opções de resposta
             Object.entries(question.alternativas).forEach(([letter, text]) => {
                 const optionId = `option-${currentQuestionIndex}-${letter}`;
                 const isChecked = userAnswers[currentQuestionIndex] === letter ? 'checked' : '';
@@ -391,7 +366,6 @@
                 `;
             });
             
-            // Mostrar resposta correta e explicação se a questão foi respondida
             if (userAnswers[currentQuestionIndex] !== undefined) {
                 correctAnswerDiv.style.display = 'block';
                 if (explanationDiv) explanationDiv.style.display = 'block';
@@ -403,38 +377,35 @@
                 }
             }
             
-            // Adicionar event listeners para as opções
             optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     userAnswers[currentQuestionIndex] = this.value;
                     
-                    // Verificar se é uma nova resposta
                     if (this.checked && !radio.hasAttribute('data-answered')) {
                         answeredQuestions++;
                         answeredInBlock++;
                         
-                        // Verificar se acertou
-                        if (this.value === currentTestQuestions[currentQuestionIndex].correta) {
+                        if (this.value === question.correta) {
                             correctInBlock++;
                         }
                         
                         updateProgressBar();
                         radio.setAttribute('data-answered', 'true');
                         
-                        // Marcar para mostrar feedback após clicar em "Próxima"
                         if (answeredInBlock === 5) {
                             showFeedbackOnNext = true;
                         }
                     }
                     
                     updateNavigationButtons();
+                    showInstantFeedback();
                 });
             });
             
             updateNavigationButtons();
+            showInstantFeedback();
         }
 
-        // Mostrar feedback do bloco de 5 questões
         function showBlockFeedback() {
             const totalInBlock = 5;
             const incorrectInBlock = totalInBlock - correctInBlock;
@@ -445,10 +416,8 @@
             feedbackIncorrect.textContent = incorrectInBlock;
             feedbackPercentage.textContent = percentage;
             
-            // Mostrar apenas as questões erradas
             feedbackMistakes.innerHTML = '';
             
-            // Encontrar as últimas 5 questões respondidas
             const lastFiveQuestions = [];
             let count = 0;
             for (let i = currentQuestionIndex; i >= 0 && count < 5; i--) {
@@ -458,7 +427,6 @@
                 }
             }
             
-            // Filtrar apenas as erradas
             const wrongQuestions = lastFiveQuestions.filter(index => 
                 userAnswers[index] !== currentTestQuestions[index].correta
             );
@@ -483,19 +451,16 @@
                     questionText.textContent = `Questão ${index + 1}: ${question.enunciado.substring(0, 50)}${question.enunciado.length > 50 ? '...' : ''}`;
                     mistakeItem.appendChild(questionText);
                     
-                    // Mostrar a alternativa correta
                     const correctOption = document.createElement('div');
                     correctOption.className = 'feedback-mistake-option feedback-mistake-correct';
                     correctOption.textContent = `✅ Correta: ${question.correta.toUpperCase()}) ${question.alternativas[question.correta]}`;
                     mistakeItem.appendChild(correctOption);
                     
-                    // Mostrar a alternativa selecionada
                     const selectedOption = document.createElement('div');
                     selectedOption.className = 'feedback-mistake-option feedback-mistake-selected';
                     selectedOption.textContent = `❌ Sua resposta: ${userAnswer.toUpperCase()}) ${question.alternativas[userAnswer]}`;
                     mistakeItem.appendChild(selectedOption);
                     
-                    // Mostrar explicação se existir
                     if (question.explicacao) {
                         const explanation = document.createElement('div');
                         explanation.className = 'feedback-mistake-option';
@@ -516,17 +481,16 @@
             }
             
             feedbackPopup.classList.add('active');
-            answeredInBlock = 0; // Resetar o contador
-            correctInBlock = 0;   // Resetar o contador de acertos
+            answeredInBlock = 0;
+            correctInBlock = 0;
             showFeedbackOnNext = false;
         }
 
-        // Mostrar feedback instantâneo
         function showInstantFeedback() {
             const question = currentTestQuestions[currentQuestionIndex];
             const userAnswer = userAnswers[currentQuestionIndex];
             
-            if (userAnswer === undefined) {
+            if (userAnswer === undefined || userAnswer === null) {
                 instantFeedback.style.display = 'none';
                 return;
             }
@@ -540,23 +504,19 @@
             instantFeedback.className = isCorrect ? 'instant-feedback correct' : 'instant-feedback incorrect';
             instantFeedback.style.display = 'block';
             
-            // Rolagem suave para o feedback
             setTimeout(() => {
                 instantFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
 
-        // Atualizar barra de progresso
         function updateProgressBar() {
             const progress = (answeredQuestions / currentTestQuestions.length) * 100;
             progressBar.style.width = `${progress}%`;
         }
 
-        // Atualizar botões de navegação
         function updateNavigationButtons() {
             prevBtn.disabled = currentQuestionIndex === 0;
             
-            // Mostrar botão de finalizar na última questão
             if (currentQuestionIndex === currentTestQuestions.length - 1) {
                 nextBtn.style.display = 'none';
                 finishBtn.style.display = 'block';
@@ -566,16 +526,12 @@
             }
         }
 
-        // Navegar para próxima questão
         function nextQuestion() {
-            // Mostrar feedback instantâneo antes de avançar
             showInstantFeedback();
             
-            // Verificar se precisa mostrar o popup de feedback
             if (showFeedbackOnNext) {
                 showBlockFeedback();
             } else {
-                // Aguardar um pouco para o usuário ver o feedback
                 setTimeout(() => {
                     if (currentQuestionIndex < currentTestQuestions.length - 1) {
                         currentQuestionIndex++;
@@ -583,33 +539,27 @@
                         instantFeedback.style.display = 'none';
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
-                }, 800); // 0.8 segundos para ver o feedback
+                }, 800);
             }
         }
 
-        // Voltar para questão anterior
         function previousQuestion() {
             if (currentQuestionIndex > 0) {
                 currentQuestionIndex--;
                 displayCurrentQuestion();
-                instantFeedback.style.display = 'none';
+                showInstantFeedback();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
-        // Finalizar teste e mostrar resultados
         function finishTest() {
-            // Mostrar feedback da última questão
             showInstantFeedback();
             
-            // Aguardar um pouco para o usuário ver o feedback
             setTimeout(() => {
-                // Calcular acertos e erros
                 currentTestQuestions.forEach((question, index) => {
                     if (userAnswers[index] === question.correta) {
                         testStatistics.correct.push(index);
                         
-                        // Registrar desempenho por área (se existir)
                         if (question.area) {
                             testStatistics.performanceByArea[question.area] = 
                                 (testStatistics.performanceByArea[question.area] || 0) + 1;
@@ -617,7 +567,6 @@
                     } else {
                         testStatistics.incorrect.push(index);
                         
-                        // Incrementar contador de erros para esta questão
                         const originalIndex = allQuestions.findIndex(q => q.id === question.id);
                         if (originalIndex !== -1) {
                             testStatistics.questionMistakes[originalIndex] = 
@@ -629,7 +578,6 @@
                 const correctPercentage = ((testStatistics.correct.length / currentTestQuestions.length) * 100).toFixed(1);
                 const finalScore = ((testStatistics.correct.length / currentTestQuestions.length) * 10).toFixed(1);
                 
-                // Registrar tentativa no histórico
                 testStatistics.attemptsHistory.push({
                     date: new Date().toLocaleString(),
                     correct: testStatistics.correct.length,
@@ -637,64 +585,45 @@
                     score: finalScore,
                     incorrect: testStatistics.incorrect,
                     attemptNumber: currentAttempt,
-                    isMistakesTest: currentAttempt % 6 === 0 // Marcar se foi prova de erros
+                    isMistakesTest: currentAttempt % 6 === 0
                 });
                 
-                // Salvar histórico no localStorage
                 localStorage.setItem('testHistory', JSON.stringify({
                     attempts: testStatistics.attemptsHistory,
                     mistakes: testStatistics.questionMistakes,
                     attemptCount: currentAttempt
                 }));
                 
-                // Mostrar página de resultados
                 showResultsPage(finalScore, correctPercentage);
             }, 800);
         }
 
-        // Mostrar página de resultados
         function showResultsPage(score, percentage) {
             quizPage.style.display = 'none';
             resultsPage.style.display = 'block';
             
-            // Atualizar texto dos resultados
             finalScoreText.textContent = `Nota Final: ${score}/10`;
             finalPercentageText.textContent = `Você acertou ${testStatistics.correct.length} de ${currentTestQuestions.length} questões (${percentage}%)`;
             
-            // Gerar gráficos
             generateCharts();
             generateAdditionalCharts();
-            
-            // Gerar análise das questões
             generateQuestionsAnalysis();
         }
 
-        // Destruir gráficos existentes
         function destroyCharts() {
             Object.values(charts).forEach(chart => {
-                if (chart) {
-                    chart.destroy();
-                }
+                if (chart) chart.destroy();
             });
         }
 
-        // Atualizar gráficos quando o modo escuro é alterado
-        function updateCharts() {
-            destroyCharts();
-            generateCharts();
-            generateAdditionalCharts();
-        }
-
-        // Gerar gráficos de desempenho
         function generateCharts() {
-            // Obter cores do CSS
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
             const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
             const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
             
-            // Gráfico de desempenho geral (pizza)
+            // Gráfico de desempenho geral
             const performanceCtx = document.getElementById('performanceChart').getContext('2d');
             charts.performance = new Chart(performanceCtx, {
                 type: 'pie',
@@ -710,7 +639,10 @@
                 options: getChartOptions('Desempenho Geral', textColor)
             });
             
-            // Gráfico de progresso (linha)
+            // Gráfico de erros por questão
+            generateMistakesChart();
+            
+            // Gráfico de progresso
             const progressCtx = document.getElementById('progressChart').getContext('2d');
             const attemptLabels = testStatistics.attemptsHistory.map((_, i) => `Tentativa ${i + 1}`);
             const attemptScores = testStatistics.attemptsHistory.map(a => parseFloat(a.score));
@@ -745,7 +677,7 @@
                 })
             });
             
-            // Gráfico de acertos por área (se disponível)
+            // Gráfico de acertos por área
             const areasCtx = document.getElementById('areasChart').getContext('2d');
             if (Object.keys(testStatistics.performanceByArea).length > 0) {
                 const areas = Object.keys(testStatistics.performanceByArea);
@@ -768,74 +700,95 @@
             } else {
                 document.querySelector('#areasChart').closest('.stat-card').style.display = 'none';
             }
+        }
+
+        function generateMistakesChart() {
+            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+            const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
             
-// ============= GRÁFICO DE ERROS POR QUESTÃO =============
-function generateMistakesChart() {
-    const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-    const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
-    const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-    
-    const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
-    const mistakesData = countMistakesByQuestion();
-    
-    charts.mistakes = new Chart(mistakesCtx, {
-        type: 'bar',
-        data: {
-            labels: mistakesData.labels,
-            datasets: [{
-                label: 'Vezes errada',
-                data: mistakesData.values,
-                backgroundColor: incorrectColor,
-                borderColor: borderColor,
-                borderWidth: 1
-            }]
-        },
-        options: getChartOptions('Questões com Erros', textColor, {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 20,
-                    ticks: { color: textColor, stepSize: 1 },
-                    grid: { color: borderColor }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        afterLabel: function(context) {
-                            const qIndex = mistakesData.questions[context.dataIndex];
-                            const question = currentTestQuestions[qIndex];
-                            return `Resposta correta: ${question.correta.toUpperCase()}`;
+            const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
+            const mistakesData = countMistakesByQuestion();
+            
+            charts.mistakes = new Chart(mistakesCtx, {
+                type: 'bar',
+                data: {
+                    labels: mistakesData.labels,
+                    datasets: [{
+                        label: 'Vezes errada',
+                        data: mistakesData.values,
+                        backgroundColor: incorrectColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Questões com Erros', textColor, {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: Math.max(...mistakesData.values) + 2 || 10,
+                            ticks: { color: textColor, stepSize: 1 },
+                            grid: { color: borderColor }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const qIndex = mistakesData.questions[context.dataIndex];
+                                    const question = currentTestQuestions[qIndex];
+                                    return `Resposta correta: ${question.correta.toUpperCase()}`;
+                                }
+                            }
                         }
                     }
-                }
-            }
-        })
-    });
-}
+                })
+            });
+        }
 
-        // Gerar gráficos adicionais
+        function countMistakesByQuestion() {
+            const mistakesCount = {};
+            const result = {
+                labels: [],
+                values: [],
+                questions: []
+            };
+            
+            testStatistics.attemptsHistory.forEach(attempt => {
+                attempt.incorrect.forEach(qIndex => {
+                    if (currentTestQuestions[qIndex]) {
+                        mistakesCount[qIndex] = (mistakesCount[qIndex] || 0) + 1;
+                    }
+                });
+            });
+            
+            const sortedQuestions = Object.keys(mistakesCount).sort((a, b) => mistakesCount[b] - mistakesCount[a]);
+            const topQuestions = sortedQuestions.slice(0, 10);
+            
+            topQuestions.forEach(qIndex => {
+                result.labels.push(`Q${parseInt(qIndex) + 1}`);
+                result.values.push(mistakesCount[qIndex]);
+                result.questions.push(qIndex);
+            });
+            
+            return result;
+        }
+
         function generateAdditionalCharts() {
-            // Obter cores do CSS
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
             const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
 
-            // Gráfico de distribuição de dificuldade (simulado)
+            // Gráfico de distribuição de dificuldade
             const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
             charts.difficulty = new Chart(difficultyCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Fácil', 'Médio', 'Difícil'],
                     datasets: [{
-                        data: [15, 15, 10], // Valores simulados
-                        backgroundColor: [
-                            '#2ecc71', // Verde
-                            '#f39c12', // Amarelo/laranja
-                            '#e74c3c'  // Vermelho
-                        ],
+                        data: [15, 15, 10],
+                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
                         borderColor: borderColor,
                         borderWidth: 1
                     }]
@@ -843,15 +796,15 @@ function generateMistakesChart() {
                 options: getChartOptions('Distribuição de Dificuldade', textColor)
             });
 
-            // Gráfico de tempo por questão (simulado)
+            // Gráfico de tempo por questão
             const timeCtx = document.getElementById('timePerQuestionChart').getContext('2d');
             const timeLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const timeData = Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30); // Tempos aleatórios entre 30-150s
+            const timeData = Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30);
             
             charts.timePerQuestion = new Chart(timeCtx, {
                 type: 'bar',
                 data: {
-                    labels: timeLabels.slice(0, 10), // Mostrar apenas as primeiras 10 para legibilidade
+                    labels: timeLabels.slice(0, 10),
                     datasets: [{
                         label: 'Tempo (segundos)',
                         data: timeData.slice(0, 10),
@@ -919,34 +872,6 @@ function generateMistakesChart() {
             });
         }
 
-        // Contar erros por questão em todas as tentativas
-        function countMistakesByQuestion() {
-            const mistakesCount = {};
-            const result = {
-                labels: [],
-                values: [],
-                questions: []
-            };
-            
-            testStatistics.attemptsHistory.forEach(attempt => {
-                attempt.incorrect.forEach(qIndex => {
-                    mistakesCount[qIndex] = (mistakesCount[qIndex] || 0) + 1;
-                });
-            });
-            
-            // Ordenar por número da questão
-            const sortedQuestions = Object.keys(mistakesCount).sort((a, b) => a - b);
-            
-            sortedQuestions.forEach(qIndex => {
-                result.labels.push(`Q${parseInt(qIndex) + 1}`);
-                result.values.push(mistakesCount[qIndex]);
-                result.questions.push(qIndex);
-            });
-            
-            return result;
-        }
-
-        // Configurações padrão para os gráficos
         function getChartOptions(title, textColor, customOptions = {}) {
             return {
                 responsive: true,
@@ -970,7 +895,6 @@ function generateMistakesChart() {
             };
         }
 
-        // Gerar análise detalhada das questões
         function generateQuestionsAnalysis() {
             questionsAnalysis.innerHTML = '';
             
@@ -1012,12 +936,10 @@ function generateMistakesChart() {
             });
         }
 
-        // Iniciar nova tentativa
         function startNewAttempt() {
             initializeTest();
         }
 
-        // Carregar novo arquivo
         function loadNewFile() {
             location.reload();
         }
