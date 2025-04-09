@@ -6,8 +6,10 @@
     <title>Questões para Treino</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+
     <style>
 .final-score {
     font-size: 2.5rem;
@@ -40,11 +42,82 @@
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
-        
+
 .header-buttons {
     display: flex;
     gap: 15px;
     align-items: center;
+}
+
+/* Novo estilo para o botão de toggle do modo noturno */
+.dark-mode-toggle {
+    background-color: var(--gray-light);
+    border: none;
+    border-radius: 50px;
+    padding: 5px;
+    width: 60px;
+    height: 30px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.dark-mode-toggle.active {
+    background-color: var(--dark);
+}
+
+.toggle-icon {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    left: 3px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode-toggle.active .toggle-icon {
+    left: calc(100% - 27px);
+    background-color: var(--primary);
+}
+
+.toggle-icon i {
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.sun-icon {
+    color: #FFD700;
+    opacity: 1;
+}
+
+.moon-icon {
+    color: white;
+    opacity: 0;
+    transform: rotate(-90deg);
+}
+
+.dark-mode-toggle.active .sun-icon {
+    opacity: 0;
+    transform: rotate(90deg);
+}
+
+.dark-mode-toggle.active .moon-icon {
+    opacity: 1;
+    transform: rotate(0deg);
+}
+
+/* Ajuste para o container do botão */
+.dark-mode-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .quiz-action-button {
@@ -80,94 +153,94 @@
     transform: translateY(-2px);
     box-shadow: var(--shadow);
 }
-        
-        /* Estilos para a caixa de imagem */
-        .image-box {
-            width: 100%;
-            max-width: 600px;
-            margin: 15px auto;
-            border: 2px solid var(--gray);
-            border-radius: 10px;
-            overflow: hidden;
-            background-color: var(--white);
-            box-shadow: var(--shadow);
-        }
 
-        .image-placeholder {
-            padding: 30px;
-            text-align: center;
-            background-color: var(--gray-light);
-            color: var(--dark);
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-        }
+/* Estilos para a caixa de imagem */
+.image-box {
+    width: 100%;
+    max-width: 600px;
+    margin: 15px auto;
+    border: 2px solid var(--gray);
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: var(--white);
+    box-shadow: var(--shadow);
+}
 
-        .image-placeholder:hover {
-            background-color: var(--gray);
-            color: var(--white);
-        }
+.image-placeholder {
+    padding: 30px;
+    text-align: center;
+    background-color: var(--gray-light);
+    color: var(--dark);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+}
 
-        /* Popup de imagem */
-        .image-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
+.image-placeholder:hover {
+    background-color: var(--gray);
+    color: var(--white);
+}
 
-        .image-popup.active {
-            opacity: 1;
-            visibility: visible;
-        }
+/* Popup de imagem */
+.image-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
 
-        .image-popup-content {
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-            width: auto;
-            height: auto;
-            background: var(--white);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-        }
+.image-popup.active {
+    opacity: 1;
+    visibility: visible;
+}
 
-        .image-popup-img {
-            max-width: 100%;
-            max-height: 80vh;
-            display: block;
-            margin: 0 auto;
-        }
+.image-popup-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
 
-        .image-popup-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.image-popup-img {
+    max-width: 100%;
+    max-height: 80vh;
+    display: block;
+    margin: 0 auto;
+}
 
-        /* Ajustes para mobile */
-        @media (max-width: 768px) {
+.image-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ajustes para mobile */
+@media (max-width: 768px) {
     .header-buttons {
         flex-direction: column;
         width: 100%;
@@ -177,24 +250,25 @@
     .quiz-home-button {
         width: 100%;
     }
-}
     
-    .home-button, .dark-mode-toggle {
+    .dark-mode-container {
         width: 100%;
+        justify-content: center;
     }
-            .image-popup-content {
-                max-width: 95%;
-                padding: 15px;
-            }
+    
+    .image-popup-content {
+        max-width: 95%;
+        padding: 15px;
+    }
 
-            .image-popup-img {
-                max-height: 70vh;
-            }
+    .image-popup-img {
+        max-height: 70vh;
+    }
 
-            .image-placeholder {
-                padding: 20px;
-            }
-        }
+    .image-placeholder {
+        padding: 20px;
+    }
+}
 
 /* Estilos para o feedback */
 .feedback-mistake-option {
@@ -230,18 +304,24 @@
     </style>
 </head>
 <body>
-    <div class="container">
+   <div class="container">
         <!-- Página do Quiz -->
         <div id="quizPage">
-<div class="header">
-    <h1>Treino de Questões</h1>
-    <div class="header-buttons">
-        <button class="quiz-action-button" id="darkModeToggle">
-            <span>Modo Escuro</span>
-        </button>
-        <a href="index.html" class="quiz-home-button">Página Principal</a>
-    </div>
-</div>
+            <div class="header">
+                <h1>Treino de Questões</h1>
+                <div class="header-buttons">
+                    <div class="dark-mode-container">
+                        <button class="dark-mode-toggle" id="darkModeToggle">
+                            <span class="toggle-icon">
+                                <i class="fas fa-sun sun-icon"></i>
+                                <i class="fas fa-moon moon-icon"></i>
+                            </span>
+                        </button>
+                        <span id="darkModeLabel">Modo Escuro</span>
+                    </div>
+                    <a href="index.html" class="quiz-home-button">Página Principal</a>
+                </div>
+            </div>
 
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
@@ -311,11 +391,11 @@
                 </div>
             </div>
 
-<div class="actions">
-    <button class="quiz-action-button" id="restartButton">Resolver mais questões</button>
-    <button class="quiz-action-button" id="reviewButton">Revisão das Questões</button>
-    <a href="index.html" class="quiz-home-button">Página Principal</a>
-</div>
+            <div class="actions">
+                <button class="quiz-action-button" id="restartButton">Resolver mais questões</button>
+                <button class="quiz-action-button" id="reviewButton">Revisão das Questões</button>
+                <a href="index.html" class="quiz-home-button">Página Principal</a>
+            </div>
         </div>
     </div>
 
@@ -1057,14 +1137,29 @@ function showFeedback(completedCount) {
             showQuestion(0);
         }
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-
-            // Recriar gráficos para aplicar as novas cores
-            if (document.getElementById('resultsPage').style.display !== 'none') {
-                generateAllCharts();
-            }
-        }
+       function toggleDarkMode() {
+    const body = document.body;
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeLabel = document.getElementById('darkModeLabel');
+    
+    body.classList.toggle('dark-mode');
+    darkModeToggle.classList.toggle('active');
+    
+    // Atualizar o texto do label
+    if (body.classList.contains('dark-mode')) {
+        darkModeLabel.textContent = 'Modo Claro';
+    } else {
+        darkModeLabel.textContent = 'Modo Escuro';
+    }
+    
+    // Salvar preferência no localStorage
+    localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+    
+    // Recriar gráficos para aplicar as novas cores
+    if (document.getElementById('resultsPage').style.display !== 'none') {
+        generateAllCharts();
+    }
+}
 
         // =============================================
         // BANCO DE QUESTÕES - EDITÁVEL
