@@ -196,24 +196,41 @@
             }
         }
 
-        /* Estilos para o feedback */
-        .feedback-mistake-option.correct {
-            background-color: var(--correct-light);
-            border-left: 4px solid var(--correct);
-            color: var(--correct);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
+/* Estilos para o feedback - Versão Corrigida */
+.feedback-mistake-option {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border-left: 4px solid transparent;
+    background-color: transparent;
+}
 
-        .feedback-mistake-option.incorrect {
-            background-color: rgba(231, 76, 60, 0.2);
-            border-left: 4px solid #c0392b;
-            color: #c0392b;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
+.feedback-mistake-option.correct {
+    background-color: var(--correct-light);
+    border-left-color: var(--correct);
+    color: var(--correct) !important; /* Força a cor do texto */
+}
+
+.feedback-mistake-option.incorrect {
+    background-color: var(--incorrect-light);
+    border-left-color: var(--incorrect);
+    color: var(--incorrect) !important; /* Força a cor do texto */
+}
+
+/* Tags de identificação */
+.correct-tag {
+    color: var(--correct) !important;
+    font-weight: bold;
+    margin-left: 8px;
+    font-size: 0.9em;
+}
+
+.incorrect-tag {
+    color: var(--incorrect) !important;
+    font-weight: bold;
+    margin-left: 8px;
+    font-size: 0.9em;
+}
     </style>
 </head>
 <body>
@@ -937,6 +954,7 @@ function showFeedback(completedCount) {
     let correctCount = 0;
     const wrongQuestions = [];
     
+    // Contar acertos e identificar questões erradas
     for (let i = 0; i < completedCount; i++) {
         if (currentAnswers[i] === currentQuestions[i].correta) {
             correctCount++;
@@ -950,17 +968,18 @@ function showFeedback(completedCount) {
     document.getElementById('feedbackCorrect').textContent = correctCount;
     document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
     
+    // Calcular e exibir porcentagem
     const percentage = ((correctCount / completedCount) * 100).toFixed(1);
     const percentageElement = document.getElementById('feedbackPercentage');
     percentageElement.textContent = `${percentage}% de acerto`;
     
-    // Colorir a porcentagem conforme o desempenho
+    // Colorir a porcentagem conforme desempenho
     if (percentage < 60) {
-        percentageElement.style.color = '#e74c3c'; // Vermelho
+        percentageElement.className = 'feedback-percentage low-score';
     } else if (percentage >= 60 && percentage < 80) {
-        percentageElement.style.color = '#f39c12'; // Laranja/amarelo
+        percentageElement.className = 'feedback-percentage medium-score';
     } else {
-        percentageElement.style.color = '#2ecc71'; // Verde
+        percentageElement.className = 'feedback-percentage high-score';
     }
     
     const mistakesContainer = document.getElementById('feedbackMistakes');
@@ -978,6 +997,7 @@ function showFeedback(completedCount) {
                     <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
             `;
             
+            // Adicionar imagem se existir
             if (question.imagem) {
                 questionHtml += `
                     <div class="image-box">
@@ -1005,8 +1025,8 @@ function showFeedback(completedCount) {
                 questionHtml += `
                     <div class="${optionClass}">
                         ${key.toUpperCase()}) ${value}
-                        ${isCorrectAnswer ? '<span class="correct-tag">(Correta)</span>' : ''}
-                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua resposta)</span>' : ''}
+                        ${isCorrectAnswer ? '<span class="correct-tag">(Resposta Correta)</span>' : ''}
+                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua Resposta)</span>' : ''}
                     </div>
                 `;
             }
@@ -1015,13 +1035,12 @@ function showFeedback(completedCount) {
             mistakesContainer.innerHTML += questionHtml;
         });
     } else {
-        mistakesContainer.innerHTML = '<p class="all-correct">🎉 Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
+        mistakesContainer.innerHTML = '<p class="all-correct-message">🎉 Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
     }
     
     // Mostrar o popup
     document.getElementById('feedbackPopup').classList.add('active');
 }
-
         function closeFeedback() {
             document.getElementById('feedbackPopup').classList.remove('active');
         }
