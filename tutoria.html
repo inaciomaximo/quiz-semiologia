@@ -8,6 +8,69 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <style>
+        /* Estilos adicionais para a caixa de imagem */
+        .image-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 15px auto;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+        }
+        
+        .image-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .image-placeholder {
+            padding: 30px;
+            text-align: center;
+            background-color: var(--gray-light);
+            color: var(--dark);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .image-placeholder:hover {
+            background-color: var(--gray);
+            color: var(--white);
+        }
+        
+        /* Estilos para o feedback */
+        .feedback-mistake-option.correct {
+            background-color: var(--correct-light);
+            border-left: 4px solid var(--correct);
+            color: var(--correct);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        .feedback-mistake-option.incorrect {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid #c0392b;
+            color: #c0392b;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        /* Ajustes para mobile */
+        @media (max-width: 768px) {
+            .image-box {
+                max-width: 100%;
+            }
+            
+            .feedback-mistake-item {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -202,7 +265,7 @@
             
             if (question.imagem) {
                 html += `
-                    <div class="question-image-container">
+                    <div class="image-box">
                         <div class="image-placeholder" onclick="showPdfPage('${question.imagem}')">
                             <span>Clique para visualizar a imagem da questão</span>
                         </div>
@@ -684,7 +747,7 @@
                     
                     if (question.imagem) {
                         questionHtml += `
-                            <div class="feedback-mistake-image">
+                            <div class="image-box">
                                 <div class="image-placeholder" onclick="showPdfPage('${question.imagem}')">
                                     <span>Clique para visualizar a imagem da questão</span>
                                 </div>
