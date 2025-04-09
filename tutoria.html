@@ -9,7 +9,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 
+.action-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.action-button:hover {
+    background-color: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .dark-mode-toggle,
+    .action-button {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
         
         /* Estilos para a caixa de imagem */
         .image-box {
@@ -184,7 +215,7 @@
         <button class="dark-mode-toggle" id="darkModeToggle">
             <span>Modo Escuro</span>
         </button>
-<a href="index.html" class="action-button" style="text-decoration: none;">Página Principal</a>
+        <a href="index.html" class="action-button">Página Principal</a>
     </div>
 </div>
 
@@ -339,6 +370,17 @@
             document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
             document.getElementById('feedbackContinue').addEventListener('click', closeFeedback);
             document.getElementById('imagePopupClose').addEventListener('click', closeImagePopup);
+            document.getElementById('feedbackPopup').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeFeedback();
+        }
+    });
+    
+    // Impedir que o clique no conteúdo feche o popup
+    document.querySelector('.feedback-content').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+}
         }
 
 function showQuestion(index) {
@@ -374,21 +416,10 @@ function showQuestion(index) {
     
     html += `<div class="options">`;
     
-    // Adicionar alternativas com seleção automática da primeira opção
+    // Adicionar alternativas
     const alternatives = Object.entries(question.alternativas);
-    let hasSelection = false;
-    
     alternatives.forEach(([key, value], i) => {
-        // Verifica se já tem resposta ou se é a primeira alternativa
-        const shouldCheck = userAnswers[index] === key || 
-                          (userAnswers[index] === null && i === 0);
-        
-        const isChecked = shouldCheck ? 'checked' : '';
-        if (shouldCheck) {
-            userAnswers[index] = key; // Atualiza o array de respostas
-            hasSelection = true;
-        }
-        
+        const isChecked = userAnswers[index] === key ? 'checked' : '';
         html += `
             <label class="option">
                 <input type="radio" name="answer" value="${key}" ${isChecked}>
@@ -396,11 +427,6 @@ function showQuestion(index) {
             </label>
         `;
     });
-    
-    // Garante que pelo menos uma opção esteja selecionada
-    if (!hasSelection && alternatives.length > 0) {
-        userAnswers[index] = alternatives[0][0];
-    }
     
     html += `</div></div>`;
     
@@ -421,14 +447,8 @@ function showQuestion(index) {
     
     // Atualizar botões de navegação
     updateNavigationButtons();
-    
-    // Disparar evento change na opção selecionada para garantir o estado
-    const selectedRadio = document.querySelector(`input[name="answer"]:checked`);
-    if (selectedRadio) {
-        selectedRadio.dispatchEvent(new Event('change'));
-    }
 }
-
+        
 function showImagePopup(pdfPageSpec) {
     // Extrair o nome do arquivo e número da página
     const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
@@ -1016,9 +1036,13 @@ function showImagePopup(pdfPageSpec) {
     document.getElementById('feedbackPopup').classList.add('active');
 }
 
-        function closeFeedback() {
-            document.getElementById('feedbackPopup').classList.remove('active');
-        }
+function closeFeedback() {
+    const popup = document.getElementById('feedbackPopup');
+    popup.classList.remove('active');
+    
+    // Reativa a interação com a página principal
+    document.getElementById('quizPage').style.pointerEvents = 'auto';
+}
 
         function restartTest() {
             // Voltar para a página do quiz
