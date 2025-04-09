@@ -178,9 +178,9 @@
     <div class="container">
         <!-- Página do Quiz -->
         <div id="quizPage">
-            <div class="header">
+<div class="header">
     <h1>Treino de Questões</h1>
-    <div class="header-buttons">
+    <div class="header-actions">
         <button class="dark-mode-toggle" id="darkModeToggle">
             <span>Modo Escuro</span>
         </button>
@@ -374,15 +374,32 @@ function showQuestion(index) {
     
     html += `<div class="options">`;
     
-    // Adicionar alternativas
-    for (const [key, value] of Object.entries(question.alternativas)) {
-        const isChecked = userAnswers[index] === key ? 'checked' : '';
+    // Adicionar alternativas com seleção automática da primeira opção
+    const alternatives = Object.entries(question.alternativas);
+    let hasSelection = false;
+    
+    alternatives.forEach(([key, value], i) => {
+        // Verifica se já tem resposta ou se é a primeira alternativa
+        const shouldCheck = userAnswers[index] === key || 
+                          (userAnswers[index] === null && i === 0);
+        
+        const isChecked = shouldCheck ? 'checked' : '';
+        if (shouldCheck) {
+            userAnswers[index] = key; // Atualiza o array de respostas
+            hasSelection = true;
+        }
+        
         html += `
             <label class="option">
                 <input type="radio" name="answer" value="${key}" ${isChecked}>
                 <span class="option-text">${key.toUpperCase()}) ${value}</span>
             </label>
         `;
+    });
+    
+    // Garante que pelo menos uma opção esteja selecionada
+    if (!hasSelection && alternatives.length > 0) {
+        userAnswers[index] = alternatives[0][0];
     }
     
     html += `</div></div>`;
@@ -404,6 +421,12 @@ function showQuestion(index) {
     
     // Atualizar botões de navegação
     updateNavigationButtons();
+    
+    // Disparar evento change na opção selecionada para garantir o estado
+    const selectedRadio = document.querySelector(`input[name="answer"]:checked`);
+    if (selectedRadio) {
+        selectedRadio.dispatchEvent(new Event('change'));
+    }
 }
 
 function showImagePopup(pdfPageSpec) {
