@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -55,23 +56,23 @@
                         <canvas id="progressChart"></canvas>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <h3>Questões com Erros</h3>
+                    <div class="chart-container">
+                        <canvas id="mistakesChart"></canvas>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Distribuição de Dificuldade</h3>
+                    <div class="chart-container">
+                        <canvas id="difficultyChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <div class="additional-stats">
                 <h2>Análise Detalhada</h2>
                 <div class="additional-charts">
-                    <div class="stat-card">
-                        <h3>Questões com Erros</h3>
-                        <div class="chart-container">
-                            <canvas id="mistakesChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Distribuição de Dificuldade</h3>
-                        <div class="chart-container">
-                            <canvas id="difficultyChart"></canvas>
-                        </div>
-                    </div>
                     <div class="stat-card">
                         <h3>Tempo por Questão</h3>
                         <div class="chart-container">
@@ -87,12 +88,8 @@
                 </div>
             </div>
 
-            <div class="questions-review" id="questionsReview">
-                <!-- Revisão das questões será inserida aqui -->
-            </div>
-
             <div class="actions">
-                <button class="action-button" id="restartButton">Resolver mais 50 questões</button>
+                <button class="action-button" id="restartButton">Resolver mais questões</button>
                 <button class="action-button" id="reviewButton">Revisão das Questões</button>
             </div>
         </div>
@@ -118,7 +115,22 @@
         </div>
     </div>
 
+    <!-- Visualizador de PDF -->
+    <div class="pdf-viewer-popup" id="pdfViewerPopup">
+        <div class="pdf-viewer-content">
+            <button class="pdf-viewer-close" id="pdfViewerClose">&times;</button>
+            <h2 class="pdf-viewer-title">Visualização da Questão</h2>
+            <div class="pdf-container" id="pdfContainer">
+                <canvas id="pdfCanvas"></canvas>
+            </div>
+            <button class="pdf-viewer-close-btn" id="pdfViewerCloseBtn">Fechar</button>
+        </div>
+    </div>
+
     <script>
+        // Configuração do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
         // Variáveis globais
         let currentQuestionIndex = 0;
         let userAnswers = [];
@@ -127,25 +139,33 @@
             correct: [],
             incorrect: [],
             mistakesByQuestion: {},
-            attemptsCount: 0
+            attemptsCount: 0,
+            startTime: null,
+            questionTimes: []
         };
         const charts = {};
         let currentTestQuestions = [];
-        let questionTimes = [];
-        let startTime = null;
-        let totalQuestions = 50;
+        let totalQuestions = 7;
         let questionsPerFeedback = 5;
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             // Carregar questões
-            currentTestQuestions = generateRandomQuestions(totalQuestions);
+            currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
             
-            // Inicializar array de respostas
+            // Inicializar array de respostas e tempos
             userAnswers = new Array(currentTestQuestions.length).fill(null);
-            questionTimes = new Array(currentTestQuestions.length).fill(0);
+            testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
             
             // Configurar eventos
+            setupEventListeners();
+            
+            // Mostrar primeira questão
+            showQuestion(currentQuestionIndex);
+            updateProgressBar();
+        });
+
+        function setupEventListeners() {
             document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
             document.getElementById('prevButton').addEventListener('click', showPreviousQuestion);
             document.getElementById('nextButton').addEventListener('click', showNextQuestion);
@@ -154,32 +174,22 @@
             document.getElementById('reviewButton').addEventListener('click', reviewQuestions);
             document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
             document.getElementById('feedbackContinue').addEventListener('click', closeFeedback);
-            
-            // Mostrar primeira questão
-            showQuestion(currentQuestionIndex);
-            updateProgressBar();
-        });
+            document.getElementById('pdfViewerClose').addEventListener('click', closePdfViewer);
+            document.getElementById('pdfViewerCloseBtn').addEventListener('click', closePdfViewer);
+        }
 
         // Funções do aplicativo
-        function generateRandomQuestions(count) {
-            // Usar as questões reais que estão no final deste arquivo
-            return sampleQuestions.slice(0, count);
-        }
-
-        function generateWeaknessQuestions(count) {
-            // Implemente sua lógica para selecionar questões que o usuário mais errou
-            return generateRandomQuestions(count);
-        }
-
         function showQuestion(index) {
             if (index < 0 || index >= currentTestQuestions.length) return;
             
-            if (startTime !== null && currentQuestionIndex >= 0) {
-                questionTimes[currentQuestionIndex] = (Date.now() - startTime) / 1000;
+            // Registrar tempo da questão anterior
+            if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
+                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
+                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
             }
             
             currentQuestionIndex = index;
-            startTime = Date.now();
+            testStatistics.startTime = Date.now();
             
             const question = currentTestQuestions[index];
             const questionContainer = document.getElementById('questionContainer');
@@ -191,13 +201,18 @@
             `;
             
             if (question.imagem) {
-                html += `<div class="question-image">
-                    <img src="${question.imagem}" alt="Imagem da questão" style="max-width: 100%; height: auto;">
-                </div>`;
+                html += `
+                    <div class="question-image-container">
+                        <div class="image-placeholder" onclick="showPdfPage('${question.imagem}')">
+                            <span>Clique para visualizar a imagem da questão</span>
+                        </div>
+                    </div>
+                `;
             }
             
             html += `<div class="options">`;
             
+            // Adicionar alternativas
             for (const [key, value] of Object.entries(question.alternativas)) {
                 const isChecked = userAnswers[index] === key ? 'checked' : '';
                 html += `
@@ -212,6 +227,7 @@
             
             questionContainer.innerHTML = html;
             
+            // Configurar eventos das opções
             document.querySelectorAll('input[name="answer"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     userAnswers[index] = this.value;
@@ -219,22 +235,25 @@
                 });
             });
             
-            document.getElementById('prevButton').disabled = index === 0;
-            document.getElementById('nextButton').disabled = index === currentTestQuestions.length - 1;
-            document.getElementById('submitButton').style.display = 
-                (index === currentTestQuestions.length - 1 && userAnswers[index] !== null) ? 'block' : 'none';
+            // Atualizar botões de navegação
+            updateNavigationButtons();
             
+            // Verificar se devemos mostrar feedback
             if ((index + 1) % questionsPerFeedback === 0 && index > 0) {
                 showFeedback(index + 1);
             }
         }
 
+        function updateNavigationButtons() {
+            document.getElementById('prevButton').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextButton').disabled = currentQuestionIndex === currentTestQuestions.length - 1;
+            document.getElementById('submitButton').style.display = 
+                (currentQuestionIndex === currentTestQuestions.length - 1 && userAnswers[currentQuestionIndex] !== null) ? 'block' : 'none';
+        }
+
         function saveAnswer(index, answer) {
             userAnswers[index] = answer;
-            
-            if (index === currentTestQuestions.length - 1) {
-                document.getElementById('submitButton').style.display = 'block';
-            }
+            updateNavigationButtons();
         }
 
         function showPreviousQuestion() {
@@ -256,16 +275,21 @@
         }
 
         function finishTest() {
-            if (startTime !== null) {
-                questionTimes[currentQuestionIndex] = (Date.now() - startTime) / 1000;
+            // Registrar tempo da última questão
+            if (testStatistics.startTime !== null) {
+                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
+                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
             }
             
+            // Calcular resultados
             calculateResults();
             
+            // Mostrar página de resultados
             document.getElementById('quizPage').style.display = 'none';
             document.getElementById('resultsPage').style.display = 'block';
             
-            generateCharts();
+            // Gerar gráficos
+            generateAllCharts();
         }
 
         function calculateResults() {
@@ -278,9 +302,10 @@
                 
                 if (userAnswer === question.correta) {
                     testStatistics.correct.push(i);
-                } else {
+                } else if (userAnswer !== null) {
                     testStatistics.incorrect.push(i);
                     
+                    // Registrar erros por questão
                     if (!testStatistics.mistakesByQuestion[i]) {
                         testStatistics.mistakesByQuestion[i] = 0;
                     }
@@ -288,94 +313,114 @@
                 }
             }
             
+            // Registrar esta tentativa
             const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
             testStatistics.attemptsHistory.push({
                 date: new Date().toISOString(),
                 score: score.toFixed(1),
                 correct: testStatistics.correct.length,
-                total: currentTestQuestions.length
+                total: currentTestQuestions.length,
+                time: testStatistics.questionTimes.reduce((a, b) => a + b, 0)
             });
             
             testStatistics.attemptsCount++;
             
-            if (testStatistics.attemptsCount % 4 === 0) {
-                // Próxima prova focada nos erros
-            }
-            
+            // Resetar estatísticas após 20 provas
             if (testStatistics.attemptsCount >= 20) {
                 testStatistics = {
                     attemptsHistory: [],
                     correct: [],
                     incorrect: [],
                     mistakesByQuestion: {},
-                    attemptsCount: 0
+                    attemptsCount: 0,
+                    startTime: null,
+                    questionTimes: []
                 };
             }
         }
 
-        function generateCharts() {
-            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
+        function generateAllCharts() {
+            generatePerformanceChart();
+            generateProgressChart();
+            generateMistakesChart();
+            generateDifficultyChart();
+            generateTimePerQuestionChart();
+            generatePerformanceEvolutionChart();
+            
+            updateTextResults();
+        }
+
+        function generatePerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
             const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
             
-            // Gráfico de desempenho geral
-            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-            charts.performance = new Chart(performanceCtx, {
+            if (charts.performance) {
+                charts.performance.destroy();
+            }
+            
+            charts.performance = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: ['Acertos', 'Erros'],
                     datasets: [{
                         data: [testStatistics.correct.length, testStatistics.incorrect.length],
                         backgroundColor: [correctColor, incorrectColor],
-                        borderColor: borderColor,
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Desempenho Geral', textColor)
+                options: getChartOptions('Desempenho Geral')
             });
+        }
+
+        function generateProgressChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
             
-            // Gráfico de progresso
-            const progressCtx = document.getElementById('progressChart').getContext('2d');
-            const attemptLabels = testStatistics.attemptsHistory.map((_, i) => `Tentativa ${i + 1}`);
-            const attemptScores = testStatistics.attemptsHistory.map(a => parseFloat(a.score));
+            if (charts.progress) {
+                charts.progress.destroy();
+            }
             
-            charts.progress = new Chart(progressCtx, {
+            const labels = testStatistics.attemptsHistory.map((_, i) => `Tentativa ${i + 1}`);
+            const data = testStatistics.attemptsHistory.map(a => parseFloat(a.score));
+            
+            charts.progress = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: attemptLabels,
+                    labels: labels,
                     datasets: [{
                         label: 'Nota (0-10)',
-                        data: attemptScores,
-                        backgroundColor: primaryColor,
+                        data: data,
                         borderColor: primaryColor,
+                        backgroundColor: primaryColor,
                         borderWidth: 2,
                         tension: 0.1,
                         fill: false
                     }]
                 },
-                options: getChartOptions('Progresso nas Tentativas', textColor, {
+                options: getChartOptions('Progresso nas Tentativas', {
                     scales: {
                         y: {
                             beginAtZero: true,
                             max: 10,
-                            ticks: { color: textColor, stepSize: 1 },
-                            grid: { color: borderColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
+                            ticks: { stepSize: 1 }
                         }
                     }
                 })
             });
+        }
+
+        function generateMistakesChart() {
+            const ctx = document.getElementById('mistakesChart').getContext('2d');
+            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
             
-            // Gráfico de erros por questão
-            const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
-            const mistakesData = countMistakesByQuestion();
+            if (charts.mistakes) {
+                charts.mistakes.destroy();
+            }
             
-            charts.mistakes = new Chart(mistakesCtx, {
+            const mistakesData = getTopMistakes();
+            
+            charts.mistakes = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: mistakesData.labels,
@@ -383,19 +428,10 @@
                         label: 'Vezes errada',
                         data: mistakesData.values,
                         backgroundColor: incorrectColor,
-                        borderColor: borderColor,
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Questões com Erros', textColor, {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 20,
-                            ticks: { color: textColor, stepSize: 1 },
-                            grid: { color: borderColor }
-                        }
-                    },
+                options: getChartOptions('Questões com Mais Erros', {
                     plugins: {
                         tooltip: {
                             callbacks: {
@@ -406,23 +442,25 @@
                                 }
                             }
                         }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
                     }
                 })
             });
-            
-            generateAdditionalCharts();
-            updateTextResults();
-            generateQuestionsReview();
         }
 
-        function countMistakesByQuestion() {
+        function getTopMistakes() {
             const labels = [];
             const values = [];
             const questions = [];
             
             const sortedEntries = Object.entries(testStatistics.mistakesByQuestion)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
+                .slice(0, 5); // Top 5 questões mais erradas
             
             sortedEntries.forEach(([qIndex, count]) => {
                 labels.push(`Q${parseInt(qIndex) + 1}`);
@@ -433,109 +471,117 @@
             return { labels, values, questions };
         }
 
-        function generateAdditionalCharts() {
-            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
-            const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
+        function generateDifficultyChart() {
+            const ctx = document.getElementById('difficultyChart').getContext('2d');
             
-            // Gráfico de distribuição de dificuldade
-            const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
-            charts.difficulty = new Chart(difficultyCtx, {
+            if (charts.difficulty) {
+                charts.difficulty.destroy();
+            }
+            
+            // Dados simulados de dificuldade (substitua por dados reais se disponível)
+            charts.difficulty = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Fácil', 'Médio', 'Difícil'],
                     datasets: [{
-                        data: [15, 15, 10],
+                        data: [3, 2, 2], // Ajuste conforme suas questões
                         backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
-                        borderColor: borderColor,
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Distribuição de Dificuldade', textColor)
+                options: getChartOptions('Distribuição de Dificuldade')
             });
+        }
+
+        function generateTimePerQuestionChart() {
+            const ctx = document.getElementById('timePerQuestionChart').getContext('2d');
+            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
             
-            // Gráfico de tempo por questão
-            const timeCtx = document.getElementById('timePerQuestionChart').getContext('2d');
-            const timeLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const timeData = questionTimes.length > 0 ? questionTimes : 
-                Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30);
-            
-            charts.timePerQuestion = new Chart(timeCtx, {
-                type: 'bar',
-                data: {
-                    labels: timeLabels.slice(0, 10),
-                    datasets: [{
-                        label: 'Tempo (segundos)',
-                        data: timeData.slice(0, 10),
-                        backgroundColor: primaryColor,
-                        borderColor: borderColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Tempo por Questão', textColor, {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        }
-                    }
-                })
-            });
-            
-            // Gráfico de evolução do desempenho
-            const evolutionCtx = document.getElementById('performanceEvolutionChart').getContext('2d');
-            const evolutionLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const evolutionData = [];
-            let correctCount = 0;
-            
-            for (let i = 0; i < currentTestQuestions.length; i++) {
-                if (userAnswers[i] === currentTestQuestions[i].correta) {
-                    correctCount++;
-                }
-                evolutionData.push((correctCount / (i + 1)) * 100);
+            if (charts.timePerQuestion) {
+                charts.timePerQuestion.destroy();
             }
             
-            charts.performanceEvolution = new Chart(evolutionCtx, {
-                type: 'line',
+            const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
+            const data = testStatistics.questionTimes.length > 0 ? 
+                testStatistics.questionTimes : 
+                Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 60) + 30);
+            
+            charts.timePerQuestion = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: evolutionLabels,
+                    labels: labels,
                     datasets: [{
-                        label: 'Taxa de Acertos (%)',
-                        data: evolutionData,
-                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        borderColor: correctColor,
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
+                        label: 'Tempo (segundos)',
+                        data: data,
+                        backgroundColor: primaryColor,
+                        borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Evolução do Desempenho', textColor, {
+                options: getChartOptions('Tempo por Questão', {
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: borderColor }
+                            beginAtZero: true
                         }
                     }
                 })
             });
         }
 
-        function getChartOptions(title, textColor, additionalOptions = {}) {
-            return {
+        function generatePerformanceEvolutionChart() {
+            const ctx = document.getElementById('performanceEvolutionChart').getContext('2d');
+            const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
+            
+            if (charts.performanceEvolution) {
+                charts.performanceEvolution.destroy();
+            }
+            
+            const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
+            const data = [];
+            let correctCount = 0;
+            
+            for (let i = 0; i < currentTestQuestions.length; i++) {
+                if (userAnswers[i] === currentTestQuestions[i].correta) {
+                    correctCount++;
+                }
+                data.push((correctCount / (i + 1)) * 100);
+            }
+            
+            charts.performanceEvolution = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Taxa de Acertos (%)',
+                        data: data,
+                        borderColor: correctColor,
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: getChartOptions('Evolução do Desempenho', {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                })
+            });
+        }
+
+        function getChartOptions(title, additionalOptions = {}) {
+            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
+            
+            const baseOptions = {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         labels: {
@@ -551,7 +597,41 @@
                         }
                     }
                 },
-                ...additionalOptions
+                scales: {
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            };
+            
+            return mergeOptions(baseOptions, additionalOptions);
+        }
+
+        function mergeOptions(base, additional) {
+            return {
+                ...base,
+                ...additional,
+                plugins: {
+                    ...base.plugins,
+                    ...(additional.plugins || {})
+                },
+                scales: {
+                    ...base.scales,
+                    ...(additional.scales || {})
+                }
             };
         }
 
@@ -559,53 +639,11 @@
             const correctCount = testStatistics.correct.length;
             const totalQuestions = currentTestQuestions.length;
             const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
+            const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
+            const avgTime = (totalTime / totalQuestions).toFixed(1);
             
             document.getElementById('finalScore').textContent = `${correctCount}/${totalQuestions}`;
-            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto`;
-        }
-
-        function generateQuestionsReview() {
-            const reviewContainer = document.getElementById('questionsReview');
-            let html = '<h2>Revisão das Questões</h2>';
-            
-            for (let i = 0; i < currentTestQuestions.length; i++) {
-                const question = currentTestQuestions[i];
-                const userAnswer = userAnswers[i];
-                const isCorrect = userAnswer === question.correta;
-                
-                html += `
-                    <div class="question-result ${isCorrect ? 'correct' : 'incorrect'}">
-                        <div class="question-number">Questão ${i + 1}</div>
-                        <div class="question-text">${question.enunciado}</div>
-                        <div class="question-result-options">
-                `;
-                
-                for (const [key, value] of Object.entries(question.alternativas)) {
-                    const isUserChoice = userAnswer === key;
-                    const isCorrectAnswer = question.correta === key;
-                    
-                    let optionClass = '';
-                    if (isCorrectAnswer) {
-                        optionClass = 'correct';
-                    } else if (isUserChoice && !isCorrect) {
-                        optionClass = 'selected';
-                    }
-                    
-                    html += `
-                        <div class="question-result-option ${optionClass}">
-                            ${key.toUpperCase()}) ${value}
-                        </div>
-                    `;
-                }
-                
-                html += `
-                        </div>
-                        ${!isCorrect ? `<div class="correct-answer">Resposta correta: ${question.correta.toUpperCase()}</div>` : ''}
-                    </div>
-                `;
-            }
-            
-            reviewContainer.innerHTML = html;
+            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
         }
 
         function showFeedback(completedCount) {
@@ -639,24 +677,44 @@
                     const question = currentQuestions[index];
                     const userAnswer = currentAnswers[index];
                     
-                    mistakesContainer.innerHTML += `
+                    let questionHtml = `
                         <div class="feedback-mistake-item">
                             <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
                     `;
                     
-                    if (userAnswer) {
-                        mistakesContainer.innerHTML += `
-                            <div class="feedback-mistake-option selected">
-                                Sua resposta: ${userAnswer.toUpperCase()}) ${question.alternativas[userAnswer]}
+                    if (question.imagem) {
+                        questionHtml += `
+                            <div class="feedback-mistake-image">
+                                <div class="image-placeholder" onclick="showPdfPage('${question.imagem}')">
+                                    <span>Clique para visualizar a imagem da questão</span>
+                                </div>
                             </div>
                         `;
                     }
                     
-                    mistakesContainer.innerHTML += `
-                        <div class="feedback-mistake-option correct">
-                            Resposta correta: ${question.correta.toUpperCase()}) ${question.alternativas[question.correta]}
-                        </div>
-                    `;
+                    questionHtml += `<div class="feedback-mistake-options">`;
+                    
+                    // Mostrar todas as alternativas
+                    for (const [key, value] of Object.entries(question.alternativas)) {
+                        const isUserChoice = userAnswer === key;
+                        const isCorrectAnswer = question.correta === key;
+                        
+                        let optionClass = 'feedback-mistake-option';
+                        if (isCorrectAnswer) {
+                            optionClass += ' correct';
+                        } else if (isUserChoice) {
+                            optionClass += ' incorrect';
+                        }
+                        
+                        questionHtml += `
+                            <div class="${optionClass}">
+                                ${key.toUpperCase()}) ${value}
+                            </div>
+                        `;
+                    }
+                    
+                    questionHtml += `</div></div>`;
+                    mistakesContainer.innerHTML += questionHtml;
                 });
             } else {
                 mistakesContainer.innerHTML = '<p>Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
@@ -669,42 +727,85 @@
             document.getElementById('feedbackPopup').classList.remove('active');
         }
 
+        function showPdfPage(pdfPageSpec) {
+            // Extrair o nome do arquivo e o número da página
+            const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
+            const pageNum = parseInt(pageNumber) || 1;
+            
+            // Configurar o visualizador de PDF
+            document.getElementById('pdfViewerPopup').classList.add('active');
+            const container = document.getElementById('pdfContainer');
+            container.innerHTML = '<canvas id="pdfCanvas"></canvas>';
+            
+            // Carregar o PDF
+            pdfjsLib.getDocument(pdfPath).promise.then(function(pdf) {
+                return pdf.getPage(pageNum);
+            }).then(function(page) {
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.getElementById('pdfCanvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext);
+            }).catch(function(error) {
+                console.error('Erro ao carregar PDF:', error);
+                container.innerHTML = '<p>Não foi possível carregar a imagem da questão.</p>';
+            });
+        }
+
+        function closePdfViewer() {
+            document.getElementById('pdfViewerPopup').classList.remove('active');
+        }
+
         function restartTest() {
+            // Voltar para a página do quiz
             document.getElementById('quizPage').style.display = 'block';
             document.getElementById('resultsPage').style.display = 'none';
             
-            if (testStatistics.attemptsCount % 4 === 0) {
-                currentTestQuestions = generateWeaknessQuestions(totalQuestions);
-            } else {
-                currentTestQuestions = generateRandomQuestions(totalQuestions);
-            }
+            // Gerar novas questões
+            currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
             
+            // Resetar respostas e tempos
             userAnswers = new Array(currentTestQuestions.length).fill(null);
-            questionTimes = new Array(currentTestQuestions.length).fill(0);
+            testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
+            testStatistics.startTime = null;
             
+            // Mostrar primeira questão
             currentQuestionIndex = 0;
             showQuestion(currentQuestionIndex);
             updateProgressBar();
             
+            // Destruir gráficos antigos
             Object.values(charts).forEach(chart => {
                 if (chart) chart.destroy();
             });
         }
 
         function reviewQuestions() {
-            alert("Função de revisão de questões será implementada aqui.");
+            // Implementação básica - pode ser expandida
+            alert("Navegue pelas questões usando os botões 'Anterior' e 'Próxima' para revisar.");
+            document.getElementById('quizPage').style.display = 'block';
+            document.getElementById('resultsPage').style.display = 'none';
+            showQuestion(0);
         }
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             
+            // Recriar gráficos para aplicar as novas cores
             if (document.getElementById('resultsPage').style.display !== 'none') {
-                generateCharts();
+                generateAllCharts();
             }
         }
 
         // =============================================
-        // BANCO DE QUESTÕES - EDITÁVEL
+        // BANCO DE QUESTÕES
         // =============================================
         const sampleQuestions = [
             {
