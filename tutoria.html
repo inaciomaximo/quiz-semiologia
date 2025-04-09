@@ -154,6 +154,18 @@
     box-shadow: var(--shadow);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 /* Estilos para a caixa de imagem */
 .image-box {
     width: 100%;
@@ -181,6 +193,18 @@
     color: var(--white);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 /* Popup de imagem */
 .image-popup {
     position: fixed;
@@ -203,6 +227,13 @@
     visibility: visible;
 }
 
+
+
+
+
+
+
+
 .image-popup-content {
     position: relative;
     max-width: 90%;
@@ -221,6 +252,16 @@
     display: block;
     margin: 0 auto;
 }
+
+
+
+
+
+
+
+
+
+
 
 .image-popup-close {
     position: absolute;
@@ -245,12 +286,13 @@
         flex-direction: column;
         width: 100%;
     }
-    
+
     .quiz-action-button,
     .quiz-home-button {
         width: 100%;
     }
-    
+
+
     .dark-mode-container {
         width: 100%;
         justify-content: center;
@@ -260,6 +302,10 @@
         max-width: 95%;
         padding: 15px;
     }
+
+
+
+
 
     .image-popup-img {
         max-height: 70vh;
@@ -393,6 +439,7 @@
 
             <div class="actions">
                 <button class="quiz-action-button" id="restartButton">Resolver mais questões</button>
+                <button class="quiz-action-button" id="reviewButton">Revisão das Questões</button>
                 <a href="index.html" class="quiz-home-button">Página Principal</a>
             </div>
         </div>
@@ -478,25 +525,25 @@
 
         function showQuestion(index) {
     if (index < 0 || index >= currentTestQuestions.length) return;
-    
+
     // Registrar tempo da questão anterior
     if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
         const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
         testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
     }
-    
+
     currentQuestionIndex = index;
     testStatistics.startTime = Date.now();
-    
+
     const question = currentTestQuestions[index];
     const questionContainer = document.getElementById('questionContainer');
-    
+
     let html = `
         <div class="question-container" id="currentQuestion">
             <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
             <div class="question-text">${question.enunciado}</div>
     `;
-    
+
     if (question.imagem) {
         html += `
             <div class="image-box">
@@ -506,9 +553,9 @@
             </div>
         `;
     }
-    
+
     html += `<div class="options">`;
-    
+
     // Adicionar alternativas
     for (const [key, value] of Object.entries(question.alternativas)) {
         const isChecked = userAnswers[index] === key ? 'checked' : '';
@@ -519,24 +566,24 @@
             </label>
         `;
     }
-    
+
     html += `</div></div>`;
-    
+
     questionContainer.innerHTML = html;
-    
+
     // Configurar eventos das opções
     document.querySelectorAll('input[name="answer"]').forEach(radio => {
         radio.addEventListener('change', function() {
             userAnswers[index] = this.value;
             saveAnswer(index, this.value);
-            
+
             // Verificar se devemos mostrar feedback após responder a questão
             if ((index + 1) % questionsPerFeedback === 0) {
                 showFeedback(index + 1);
             }
         });
     });
-    
+
     // Atualizar botões de navegação
     updateNavigationButtons();
 }
@@ -987,19 +1034,19 @@ function showImagePopup(pdfPageSpec) {
     const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
     const avgTime = (totalTime / totalQuestions).toFixed(1);
     const score = (correctCount / totalQuestions) * 10;
-    
+
     const finalScoreElement = document.getElementById('finalScore');
     const finalPercentageElement = document.getElementById('finalPercentage');
-    
+
     // Formatando a nota para mostrar como "X/Y" (acertos/total) e "X.Y/10"
     finalScoreElement.innerHTML = `
         <span>${correctCount}/${totalQuestions}</span>
         <span class="score-divider"> | </span>
         <span class="score-10">${score.toFixed(1)}/10</span>
     `;
-    
+
     finalPercentageElement.textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
-    
+
     // Aplicar cores conforme a nota
     if (score < 6) {
         finalScoreElement.style.color = '#e74c3c'; // Vermelho
@@ -1011,7 +1058,7 @@ function showImagePopup(pdfPageSpec) {
         finalScoreElement.style.color = '#2ecc71'; // Verde
         finalPercentageElement.style.color = '#2ecc71';
     }
-    
+
     // Adicionar classe para animação
     finalScoreElement.classList.add('score-animation');
     setTimeout(() => {
@@ -1021,13 +1068,13 @@ function showImagePopup(pdfPageSpec) {
 
 function showFeedback(completedCount) {
     completedCount = Math.min(completedCount, currentTestQuestions.length);
-    
+
     const currentAnswers = userAnswers.slice(0, completedCount);
     const currentQuestions = currentTestQuestions.slice(0, completedCount);
-    
+
     let correctCount = 0;
     const wrongQuestions = [];
-    
+
     for (let i = 0; i < completedCount; i++) {
         if (currentAnswers[i] === currentQuestions[i].correta) {
             correctCount++;
@@ -1035,30 +1082,30 @@ function showFeedback(completedCount) {
             wrongQuestions.push(i);
         }
     }
-    
+
     // Atualizar estatísticas
     document.getElementById('feedbackCompleted').textContent = completedCount;
     document.getElementById('feedbackCorrect').textContent = correctCount;
     document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
-    
+
     const percentage = ((correctCount / completedCount) * 100).toFixed(1);
     document.getElementById('feedbackPercentage').textContent = `${percentage}% de acerto`;
-    
+
     const mistakesContainer = document.getElementById('feedbackMistakes');
     mistakesContainer.innerHTML = '';
-    
+
     if (wrongQuestions.length > 0) {
         mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
-        
+
         wrongQuestions.forEach(index => {
             const question = currentQuestions[index];
             const userAnswer = currentAnswers[index];
-            
+
             let questionHtml = `
                 <div class="feedback-mistake-item">
                     <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
             `;
-            
+
             if (question.imagem) {
                 questionHtml += `
                     <div class="image-box">
@@ -1068,21 +1115,21 @@ function showFeedback(completedCount) {
                     </div>
                 `;
             }
-            
+
             questionHtml += `<div class="feedback-mistake-options">`;
-            
+
             // Mostrar todas as alternativas
             for (const [key, value] of Object.entries(question.alternativas)) {
                 const isUserChoice = userAnswer === key;
                 const isCorrectAnswer = question.correta === key;
-                
+
                 let optionClass = 'feedback-mistake-option';
                 if (isCorrectAnswer) {
                     optionClass += ' correct';
                 } else if (isUserChoice) {
                     optionClass += ' incorrect';
                 }
-                
+
                 questionHtml += `
                     <div class="${optionClass}">
                         ${key.toUpperCase()}) ${value}
@@ -1091,14 +1138,14 @@ function showFeedback(completedCount) {
                     </div>
                 `;
             }
-            
+
             questionHtml += `</div></div>`;
             mistakesContainer.innerHTML += questionHtml;
         });
     } else {
         mistakesContainer.innerHTML = '<p class="all-correct-message">🎉 Todas as questões respondidas até agora estão corretas!</p>';
     }
-    
+
     document.getElementById('feedbackPopup').classList.add('active');
 }
         function closeFeedback() {
