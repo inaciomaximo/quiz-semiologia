@@ -9,31 +9,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
-.home-button {
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    padding: 10px 15px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-.home-button:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-2px);
-}
-
-.header-buttons {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+.quiz-home-button {
+        background-color: var(--primary);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s ease;
+    }
+    
+    .quiz-home-button:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+    }
         
         /* Estilos para a caixa de imagem */
         .image-box {
@@ -168,13 +158,13 @@
     <div class="container">
         <!-- Página do Quiz -->
         <div id="quizPage">
-            <div class="header">
+<div class="header">
     <h1>Treino de Questões</h1>
     <div class="header-buttons">
-        <button class="dark-mode-toggle" id="darkModeToggle">
+        <button class="quiz-action-button" id="darkModeToggle">
             <span>Modo Escuro</span>
         </button>
-        <a href="index.html" class="home-button">Página Principal</a>
+        <a href="index.html" class="quiz-home-button">Página Principal</a>
     </div>
 </div>
 
@@ -246,10 +236,10 @@
                 </div>
             </div>
 
-            <div class="actions">
-    <button class="action-button" id="restartButton">Resolver mais questões</button>
-    <button class="action-button" id="reviewButton">Revisão das Questões</button>
-    <a href="index.html" class="action-button home-button">Página Principal</a>
+<div class="actions">
+    <button class="quiz-action-button" id="restartButton">Resolver mais questões</button>
+    <button class="quiz-action-button" id="reviewButton">Revisão das Questões</button>
+    <a href="index.html" class="quiz-home-button">Página Principal</a>
 </div>
         </div>
     </div>
