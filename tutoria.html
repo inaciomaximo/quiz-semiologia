@@ -9,6 +9,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
+.final-score {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 20px 0;
+    transition: color 0.3s ease;
+}
+
+.final-percentage {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+    transition: color 0.3s ease;
+}
+
+.score-divider {
+    color: var(--gray);
+    margin: 0 5px;
+}
+
+.score-10 {
+    font-size: 0.9em;
+}
+
+.score-animation {
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+        
 .header-buttons {
     display: flex;
     gap: 15px;
@@ -353,69 +385,69 @@
         }
 
         function showQuestion(index) {
-            if (index < 0 || index >= currentTestQuestions.length) return;
-
-            // Registrar tempo da questão anterior
-            if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
-                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
-                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
-            }
-
-            currentQuestionIndex = index;
-            testStatistics.startTime = Date.now();
-
-            const question = currentTestQuestions[index];
-            const questionContainer = document.getElementById('questionContainer');
-
-            let html = `
-                <div class="question-container" id="currentQuestion">
-                    <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
-                    <div class="question-text">${question.enunciado}</div>
-            `;
-
-            if (question.imagem) {
-                html += `
-                    <div class="image-box">
-                        <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                            <span>Clique para visualizar a imagem da questão</span>
-                        </div>
-                    </div>
-                `;
-            }
-
-            html += `<div class="options">`;
-
-            // Adicionar alternativas
-            for (const [key, value] of Object.entries(question.alternativas)) {
-                const isChecked = userAnswers[index] === key ? 'checked' : '';
-                html += `
-                    <label class="option">
-                        <input type="radio" name="answer" value="${key}" ${isChecked}>
-                        <span class="option-text">${key.toUpperCase()}) ${value}</span>
-                    </label>
-                `;
-            }
-
-            html += `</div></div>`;
-
-            questionContainer.innerHTML = html;
-
-            // Configurar eventos das opções
-            document.querySelectorAll('input[name="answer"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    userAnswers[index] = this.value;
-                    saveAnswer(index, this.value);
-                });
-            });
-
-            // Atualizar botões de navegação
-            updateNavigationButtons();
-
-            // Verificar se devemos mostrar feedback
-            if ((index + 1) % questionsPerFeedback === 0 && index > 0) {
+    if (index < 0 || index >= currentTestQuestions.length) return;
+    
+    // Registrar tempo da questão anterior
+    if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
+        const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
+        testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
+    }
+    
+    currentQuestionIndex = index;
+    testStatistics.startTime = Date.now();
+    
+    const question = currentTestQuestions[index];
+    const questionContainer = document.getElementById('questionContainer');
+    
+    let html = `
+        <div class="question-container" id="currentQuestion">
+            <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
+            <div class="question-text">${question.enunciado}</div>
+    `;
+    
+    if (question.imagem) {
+        html += `
+            <div class="image-box">
+                <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
+                    <span>Clique para visualizar a imagem da questão</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += `<div class="options">`;
+    
+    // Adicionar alternativas
+    for (const [key, value] of Object.entries(question.alternativas)) {
+        const isChecked = userAnswers[index] === key ? 'checked' : '';
+        html += `
+            <label class="option">
+                <input type="radio" name="answer" value="${key}" ${isChecked}>
+                <span class="option-text">${key.toUpperCase()}) ${value}</span>
+            </label>
+        `;
+    }
+    
+    html += `</div></div>`;
+    
+    questionContainer.innerHTML = html;
+    
+    // Configurar eventos das opções
+    document.querySelectorAll('input[name="answer"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            userAnswers[index] = this.value;
+            saveAnswer(index, this.value);
+            
+            // Verificar se devemos mostrar feedback após responder a questão
+            if ((index + 1) % questionsPerFeedback === 0) {
                 showFeedback(index + 1);
             }
-        }
+        });
+    });
+    
+    // Atualizar botões de navegação
+    updateNavigationButtons();
+}
 
 function showImagePopup(pdfPageSpec) {
     // Extrair o nome do arquivo e número da página
@@ -856,93 +888,139 @@ function showImagePopup(pdfPageSpec) {
             };
         }
 
-        function updateTextResults() {
-            const correctCount = testStatistics.correct.length;
-            const totalQuestions = currentTestQuestions.length;
-            const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
-            const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
-            const avgTime = (totalTime / totalQuestions).toFixed(1);
+       function updateTextResults() {
+    const correctCount = testStatistics.correct.length;
+    const totalQuestions = currentTestQuestions.length;
+    const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
+    const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
+    const avgTime = (totalTime / totalQuestions).toFixed(1);
+    const score = (correctCount / totalQuestions) * 10;
+    
+    const finalScoreElement = document.getElementById('finalScore');
+    const finalPercentageElement = document.getElementById('finalPercentage');
+    
+    // Formatando a nota para mostrar como "X/Y" (acertos/total) e "X.Y/10"
+    finalScoreElement.innerHTML = `
+        <span>${correctCount}/${totalQuestions}</span>
+        <span class="score-divider"> | </span>
+        <span class="score-10">${score.toFixed(1)}/10</span>
+    `;
+    
+    finalPercentageElement.textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
+    
+    // Aplicar cores conforme a nota
+    if (score < 6) {
+        finalScoreElement.style.color = '#e74c3c'; // Vermelho
+        finalPercentageElement.style.color = '#e74c3c';
+    } else if (score >= 6 && score < 8) {
+        finalScoreElement.style.color = '#f39c12'; // Laranja/amarelo
+        finalPercentageElement.style.color = '#f39c12';
+    } else {
+        finalScoreElement.style.color = '#2ecc71'; // Verde
+        finalPercentageElement.style.color = '#2ecc71';
+    }
+    
+    // Adicionar classe para animação
+    finalScoreElement.classList.add('score-animation');
+    setTimeout(() => {
+        finalScoreElement.classList.remove('score-animation');
+    }, 1000);
+}
 
-            document.getElementById('finalScore').textContent = `${correctCount}/${totalQuestions}`;
-            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
+function showFeedback(completedCount) {
+    // Garantir que não exceda o número total de questões
+    completedCount = Math.min(completedCount, currentTestQuestions.length);
+    
+    const currentAnswers = userAnswers.slice(0, completedCount);
+    const currentQuestions = currentTestQuestions.slice(0, completedCount);
+    
+    let correctCount = 0;
+    const wrongQuestions = [];
+    
+    for (let i = 0; i < completedCount; i++) {
+        if (currentAnswers[i] === currentQuestions[i].correta) {
+            correctCount++;
+        } else if (currentAnswers[i] !== null) {
+            wrongQuestions.push(i);
         }
-
-        function showFeedback(completedCount) {
-            const currentAnswers = userAnswers.slice(0, completedCount);
-            const currentQuestions = currentTestQuestions.slice(0, completedCount);
-
-            let correctCount = 0;
-            const wrongQuestions = [];
-
-            for (let i = 0; i < completedCount; i++) {
-                if (currentAnswers[i] === currentQuestions[i].correta) {
-                    correctCount++;
-                } else if (currentAnswers[i] !== null) {
-                    wrongQuestions.push(i);
+    }
+    
+    // Atualizar estatísticas no popup
+    document.getElementById('feedbackCompleted').textContent = completedCount;
+    document.getElementById('feedbackCorrect').textContent = correctCount;
+    document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
+    
+    const percentage = ((correctCount / completedCount) * 100).toFixed(1);
+    const percentageElement = document.getElementById('feedbackPercentage');
+    percentageElement.textContent = `${percentage}% de acerto`;
+    
+    // Colorir a porcentagem conforme o desempenho
+    if (percentage < 60) {
+        percentageElement.style.color = '#e74c3c'; // Vermelho
+    } else if (percentage >= 60 && percentage < 80) {
+        percentageElement.style.color = '#f39c12'; // Laranja/amarelo
+    } else {
+        percentageElement.style.color = '#2ecc71'; // Verde
+    }
+    
+    const mistakesContainer = document.getElementById('feedbackMistakes');
+    mistakesContainer.innerHTML = '';
+    
+    if (wrongQuestions.length > 0) {
+        mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
+        
+        wrongQuestions.forEach(index => {
+            const question = currentQuestions[index];
+            const userAnswer = currentAnswers[index];
+            
+            let questionHtml = `
+                <div class="feedback-mistake-item">
+                    <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
+            `;
+            
+            if (question.imagem) {
+                questionHtml += `
+                    <div class="image-box">
+                        <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
+                            <span>Clique para visualizar a imagem da questão</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            questionHtml += `<div class="feedback-mistake-options">`;
+            
+            // Mostrar todas as alternativas
+            for (const [key, value] of Object.entries(question.alternativas)) {
+                const isUserChoice = userAnswer === key;
+                const isCorrectAnswer = question.correta === key;
+                
+                let optionClass = 'feedback-mistake-option';
+                if (isCorrectAnswer) {
+                    optionClass += ' correct';
+                } else if (isUserChoice) {
+                    optionClass += ' incorrect';
                 }
+                
+                questionHtml += `
+                    <div class="${optionClass}">
+                        ${key.toUpperCase()}) ${value}
+                        ${isCorrectAnswer ? '<span class="correct-tag">(Correta)</span>' : ''}
+                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua resposta)</span>' : ''}
+                    </div>
+                `;
             }
-
-            document.getElementById('feedbackCompleted').textContent = completedCount;
-            document.getElementById('feedbackCorrect').textContent = correctCount;
-            document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
-            document.getElementById('feedbackPercentage').textContent = 
-                `${((correctCount / completedCount) * 100).toFixed(1)}% de acerto`;
-
-            const mistakesContainer = document.getElementById('feedbackMistakes');
-            mistakesContainer.innerHTML = '';
-
-            if (wrongQuestions.length > 0) {
-                mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
-
-                wrongQuestions.forEach(index => {
-                    const question = currentQuestions[index];
-                    const userAnswer = currentAnswers[index];
-
-                    let questionHtml = `
-                        <div class="feedback-mistake-item">
-                            <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
-                    `;
-
-                    if (question.imagem) {
-                        questionHtml += `
-                            <div class="image-box">
-                                <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                                    <span>Clique para visualizar a imagem da questão</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    questionHtml += `<div class="feedback-mistake-options">`;
-
-                    // Mostrar todas as alternativas
-                    for (const [key, value] of Object.entries(question.alternativas)) {
-                        const isUserChoice = userAnswer === key;
-                        const isCorrectAnswer = question.correta === key;
-
-                        let optionClass = 'feedback-mistake-option';
-                        if (isCorrectAnswer) {
-                            optionClass += ' correct';
-                        } else if (isUserChoice) {
-                            optionClass += ' incorrect';
-                        }
-
-                        questionHtml += `
-                            <div class="${optionClass}">
-                                ${key.toUpperCase()}) ${value}
-                            </div>
-                        `;
-                    }
-
-                    questionHtml += `</div></div>`;
-                    mistakesContainer.innerHTML += questionHtml;
-                });
-            } else {
-                mistakesContainer.innerHTML = '<p>Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
-            }
-
-            document.getElementById('feedbackPopup').classList.add('active');
-        }
+            
+            questionHtml += `</div></div>`;
+            mistakesContainer.innerHTML += questionHtml;
+        });
+    } else {
+        mistakesContainer.innerHTML = '<p class="all-correct">🎉 Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
+    }
+    
+    // Mostrar o popup
+    document.getElementById('feedbackPopup').classList.add('active');
+}
 
         function closeFeedback() {
             document.getElementById('feedbackPopup').classList.remove('active');
