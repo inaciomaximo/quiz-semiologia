@@ -120,40 +120,113 @@
     gap: 10px;
 }
 
-.quiz-action-button {
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    padding: 10px 15px;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
+.quiz-action-button,
 .quiz-home-button {
     background-color: var(--primary);
     color: white;
     border: none;
     border-radius: var(--border-radius);
-    padding: 10px 15px;
+    padding: 12px 24px;
     font-family: 'Poppins', sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     text-decoration: none;
-    display: inline-block;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
 }
 
+/* Efeito hover mais suave */
 .quiz-action-button:hover,
 .quiz-home-button:hover {
     background-color: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Efeito ativo (quando clicado) */
+.quiz-action-button:active,
+.quiz-home-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Efeito de ripple */
+.quiz-action-button::after,
+.quiz-home-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.quiz-action-button:focus:not(:active)::after,
+.quiz-home-button:focus:not(:active)::after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+/* Estilo para quando estiver desabilitado */
+.quiz-action-button:disabled,
+.quiz-home-button:disabled {
+    background-color: var(--gray-light);
+    color: var(--gray-dark);
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Dark mode */
+.dark-mode .quiz-action-button,
+.dark-mode .quiz-home-button {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .quiz-action-button:hover,
+.dark-mode .quiz-home-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Melhorias específicas para quiz-home-button */
+.quiz-home-button {
+    text-align: center;
+    min-width: 120px;
+}
+
+/* Ícones nos botões */
+.quiz-action-button i,
+.quiz-home-button i {
+    font-size: 1.1em;
+    transition: transform 0.3s ease;
+}
+
+.quiz-action-button:hover i,
+.quiz-home-button:hover i {
+    transform: translateX(2px);
+}
 /* Estilos para a caixa de imagem */
 .image-box {
     width: 100%;
@@ -393,7 +466,6 @@
 
             <div class="actions">
                 <button class="quiz-action-button" id="restartButton">Resolver mais questões</button>
-                <button class="quiz-action-button" id="reviewButton">Revisão das Questões</button>
                 <a href="index.html" class="quiz-home-button">Página Principal</a>
             </div>
         </div>
