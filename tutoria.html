@@ -3,122 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutoria - Simulador de Provas</title>
+    <title>Questões para Treino</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-  
 <body>
     <div class="container">
         <!-- Página do Quiz -->
         <div id="quizPage">
             <div class="header">
-                <h1>Simulador de Provas</h1>
+                <h1>Treino de Questões</h1>
                 <button class="dark-mode-toggle" id="darkModeToggle">
-                    <span id="darkModeIcon">🌙</span>
                     <span>Modo Escuro</span>
                 </button>
             </div>
-
-            <input type="file" id="jsonInput" accept=".json">
 
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
 
-            <div id="currentQuestion"></div>
-
-            <div class="instant-feedback" id="instantFeedback"></div>
+            <div id="questionContainer">
+                <!-- As questões serão inseridas aqui dinamicamente -->
+            </div>
 
             <div class="navigation">
-                <button onclick="previousQuestion()" id="prevBtn" class="nav-button" disabled>Anterior</button>
-                <button onclick="nextQuestion()" id="nextBtn" class="nav-button">Próxima</button>
-                <button onclick="finishTest()" id="finishBtn" class="nav-button" style="display: none;">Finalizar Prova</button>
+                <button class="nav-button" id="prevButton" disabled>Anterior</button>
+                <button class="nav-button" id="nextButton">Próxima</button>
+                <button class="nav-button" id="submitButton" style="display: none;">Finalizar Prova</button>
             </div>
         </div>
 
         <!-- Página de Resultados -->
         <div id="resultsPage">
-            <div class="header">
-                <h1>Resultados da Prova</h1>
-                <button class="dark-mode-toggle" id="darkModeToggleResults">
-                    <span id="darkModeIconResults">🌙</span>
-                    <span>Modo Escuro</span>
-                </button>
+            <div class="results-header">
+                <h1>Resultados do Teste</h1>
+                <div class="final-score" id="finalScore"></div>
+                <div class="final-percentage" id="finalPercentage"></div>
             </div>
 
-            <div class="results-container">
-                <div class="results-header">
-                    <div class="final-score" id="finalScoreText"></div>
-                    <div class="final-percentage" id="finalPercentageText"></div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Desempenho Geral</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
                 </div>
+                <div class="stat-card">
+                    <h3>Progresso</h3>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Desempenho Geral</h3>
-                        <div class="chart-container">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Progresso nas Tentativas</h3>
-                        <div class="chart-container">
-                            <canvas id="progressChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Acertos por Área</h3>
-                        <div class="chart-container">
-                            <canvas id="areasChart"></canvas>
-                        </div>
-                    </div>
+            <div class="additional-stats">
+                <h2>Análise Detalhada</h2>
+                <div class="additional-charts">
                     <div class="stat-card">
                         <h3>Questões com Erros</h3>
                         <div class="chart-container">
                             <canvas id="mistakesChart"></canvas>
                         </div>
                     </div>
-                </div>
-
-                <div class="additional-stats">
-                    <h3>Estatísticas Adicionais</h3>
-                    
-                    <div class="additional-charts">
-                        <div class="stat-card">
-                            <h4>Distribuição de Dificuldade</h4>
-                            <div class="chart-container">
-                                <canvas id="difficultyChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <h4>Tempo por Questão</h4>
-                            <div class="chart-container">
-                                <canvas id="timePerQuestionChart"></canvas>
-                            </div>
+                    <div class="stat-card">
+                        <h3>Distribuição de Dificuldade</h3>
+                        <div class="chart-container">
+                            <canvas id="difficultyChart"></canvas>
                         </div>
                     </div>
-
-                    <div class="time-stat">
-                        <div class="stat-card">
-                            <h4>Evolução do Desempenho</h4>
-                            <div class="chart-container">
-                                <canvas id="performanceEvolutionChart"></canvas>
-                            </div>
+                    <div class="stat-card">
+                        <h3>Tempo por Questão</h3>
+                        <div class="chart-container">
+                            <canvas id="timePerQuestionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Evolução do Desempenho</h3>
+                        <div class="chart-container">
+                            <canvas id="performanceEvolutionChart"></canvas>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="questions-review">
-                    <h3>Análise Detalhada por Questão</h3>
-                    <div id="questionsAnalysis"></div>
-                </div>
+            <div class="questions-review" id="questionsReview">
+                <!-- Revisão das questões será inserida aqui -->
+            </div>
 
-                <div class="actions">
-                    <button onclick="startNewAttempt()" class="action-button">Nova Tentativa (40 questões)</button>
-                    <button onclick="loadNewFile()" class="action-button">Carregar Novo Arquivo</button>
-                </div>
+            <div class="actions">
+                <button class="action-button" id="restartButton">Resolver mais 50 questões</button>
+                <button class="action-button" id="reviewButton">Revisão das Questões</button>
             </div>
         </div>
     </div>
@@ -126,494 +101,216 @@
     <!-- Popup de Feedback -->
     <div class="feedback-popup" id="feedbackPopup">
         <div class="feedback-content">
-            <button class="feedback-close" id="closeFeedback">×</button>
-            <h3 class="feedback-title">Seu desempenho no bloco</h3>
+            <button class="feedback-close" id="feedbackClose">&times;</button>
+            <h2 class="feedback-title">Feedback Parcial</h2>
             <div class="feedback-stats">
-                Você respondeu <span id="feedbackTotal">5</span> questões neste bloco.
+                Você completou <span id="feedbackCompleted">5</span> questões.
+                <span class="feedback-correct" id="feedbackCorrect">3</span> corretas e 
+                <span class="feedback-incorrect" id="feedbackIncorrect">2</span> incorretas.
             </div>
-            <div class="feedback-stats">
-                <span class="feedback-correct">Acertos: <span id="feedbackCorrect">0</span></span> | 
-                <span class="feedback-incorrect">Erros: <span id="feedbackIncorrect">0</span></span>
-            </div>
-            <div class="feedback-percentage">
-                Taxa de acertos: <span id="feedbackPercentage">0</span>%
-            </div>
+            <div class="feedback-percentage" id="feedbackPercentage">60% de acerto</div>
             
             <div class="feedback-mistakes" id="feedbackMistakes">
-                <!-- As questões erradas serão inseridas aqui pelo JavaScript -->
+                <!-- Erros serão inseridos aqui -->
             </div>
             
-            <button class="feedback-continue" id="continueButton">Continuar</button>
+            <button class="feedback-continue" id="feedbackContinue">Continuar</button>
         </div>
     </div>
 
     <script>
         // Variáveis globais
-        let allQuestions = [];
-        let currentTestQuestions = [];
         let currentQuestionIndex = 0;
-        let userAnswers = {};
+        let userAnswers = [];
         let testStatistics = {
+            attemptsHistory: [],
             correct: [],
             incorrect: [],
-            attemptsHistory: [],
-            performanceByArea: {},
-            questionMistakes: {}
+            mistakesByQuestion: {},
+            attemptsCount: 0
         };
-        let answeredQuestions = 0;
-        let answeredInBlock = 0;
-        let correctInBlock = 0;
-        let showFeedbackOnNext = false;
-        let currentAttempt = 0;
-        let charts = {
-            performance: null,
-            progress: null,
-            areas: null,
-            mistakes: null,
-            difficulty: null,
-            timePerQuestion: null,
-            performanceEvolution: null
-        };
+        const charts = {};
+        let currentTestQuestions = [];
+        let questionTimes = [];
+        let startTime = null;
+        let totalQuestions = 50;
+        let questionsPerFeedback = 5;
 
-        // Elementos DOM
-        const quizPage = document.getElementById('quizPage');
-        const resultsPage = document.getElementById('resultsPage');
-        const currentQuestionDiv = document.getElementById('currentQuestion');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const finishBtn = document.getElementById('finishBtn');
-        const jsonInput = document.getElementById('jsonInput');
-        const finalScoreText = document.getElementById('finalScoreText');
-        const finalPercentageText = document.getElementById('finalPercentageText');
-        const questionsAnalysis = document.getElementById('questionsAnalysis');
-        const progressBar = document.getElementById('progressBar');
-        const instantFeedback = document.getElementById('instantFeedback');
-        const feedbackPopup = document.getElementById('feedbackPopup');
-        const closeFeedback = document.getElementById('closeFeedback');
-        const continueButton = document.getElementById('continueButton');
-        const feedbackTotal = document.getElementById('feedbackTotal');
-        const feedbackCorrect = document.getElementById('feedbackCorrect');
-        const feedbackIncorrect = document.getElementById('feedbackIncorrect');
-        const feedbackPercentage = document.getElementById('feedbackPercentage');
-        const feedbackMistakes = document.getElementById('feedbackMistakes');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const darkModeIcon = document.getElementById('darkModeIcon');
-        const darkModeToggleResults = document.getElementById('darkModeToggleResults');
-        const darkModeIconResults = document.getElementById('darkModeIconResults');
-
-        // Alternar modo escuro/claro
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            darkModeIcon.textContent = isDark ? '☀️' : '🌙';
-            darkModeIconResults.textContent = isDark ? '☀️' : '🌙';
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar questões
+            currentTestQuestions = generateRandomQuestions(totalQuestions);
             
-            if (resultsPage.style.display === 'block') {
-                destroyCharts();
-                generateCharts();
-                generateAdditionalCharts();
-            }
-        }
-
-        // Verificar modo escuro no carregamento
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            document.body.classList.add('dark-mode');
-            darkModeIcon.textContent = '☀️';
-            darkModeIconResults.textContent = '☀️';
-        }
-
-        // Event listeners
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-        darkModeToggleResults.addEventListener('click', toggleDarkMode);
-        closeFeedback.addEventListener('click', () => feedbackPopup.classList.remove('active'));
-        continueButton.addEventListener('click', continueToNextQuestion);
-
-        function continueToNextQuestion() {
-            feedbackPopup.classList.remove('active');
-            if (currentQuestionIndex < currentTestQuestions.length - 1) {
-                currentQuestionIndex++;
-                displayCurrentQuestion();
-                instantFeedback.style.display = 'none';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        // Carregar arquivo JSON
-        jsonInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+            // Inicializar array de respostas
+            userAnswers = new Array(currentTestQuestions.length).fill(null);
+            questionTimes = new Array(currentTestQuestions.length).fill(0);
             
-            const reader = new FileReader();
+            // Configurar eventos
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            document.getElementById('prevButton').addEventListener('click', showPreviousQuestion);
+            document.getElementById('nextButton').addEventListener('click', showNextQuestion);
+            document.getElementById('submitButton').addEventListener('click', finishTest);
+            document.getElementById('restartButton').addEventListener('click', restartTest);
+            document.getElementById('reviewButton').addEventListener('click', reviewQuestions);
+            document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
+            document.getElementById('feedbackContinue').addEventListener('click', closeFeedback);
             
-            reader.onload = function(event) {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    allQuestions = Array.isArray(data) ? data : data.questions;
-                    
-                    if (allQuestions.length === 0) {
-                        throw new Error('O arquivo JSON não contém questões válidas.');
-                    }
-                    
-                    allQuestions.forEach((q, index) => {
-                        testStatistics.questionMistakes[index] = testStatistics.questionMistakes[index] || 0;
-                    });
-                    
-                    const savedHistory = localStorage.getItem('testHistory');
-                    if (savedHistory) {
-                        const history = JSON.parse(savedHistory);
-                        testStatistics.attemptsHistory = history.attempts || [];
-                        testStatistics.questionMistakes = history.mistakes || {};
-                        currentAttempt = history.attemptCount || 0;
-                    }
-                    
-                    initializeTest();
-                } catch (error) {
-                    alert('Erro ao carregar o arquivo: ' + error.message);
-                    console.error(error);
-                }
-            };
-            
-            reader.onerror = function() {
-                alert('Erro ao ler o arquivo. Tente novamente.');
-            };
-            
-            reader.readAsText(file);
+            // Mostrar primeira questão
+            showQuestion(currentQuestionIndex);
+            updateProgressBar();
         });
 
-        // Iniciar novo teste
-        function initializeTest() {
-            userAnswers = {};
-            currentQuestionIndex = 0;
-            answeredQuestions = 0;
-            answeredInBlock = 0;
-            correctInBlock = 0;
-            showFeedbackOnNext = false;
-            testStatistics.correct = [];
-            testStatistics.incorrect = [];
-            testStatistics.performanceByArea = {};
+        // Funções do aplicativo
+        function generateRandomQuestions(count) {
+            // Usar as questões reais que estão no final deste arquivo
+            return sampleQuestions.slice(0, count);
+        }
+
+        function generateWeaknessQuestions(count) {
+            // Implemente sua lógica para selecionar questões que o usuário mais errou
+            return generateRandomQuestions(count);
+        }
+
+        function showQuestion(index) {
+            if (index < 0 || index >= currentTestQuestions.length) return;
             
-            currentAttempt++;
-            
-            if (currentAttempt % 6 === 0) {
-                currentTestQuestions = getMostMistakenQuestions(allQuestions, 40);
-            } else {
-                currentTestQuestions = getRandomQuestions(allQuestions, 40);
+            if (startTime !== null && currentQuestionIndex >= 0) {
+                questionTimes[currentQuestionIndex] = (Date.now() - startTime) / 1000;
             }
             
-            quizPage.style.display = 'block';
-            resultsPage.style.display = 'none';
-            displayCurrentQuestion();
-            updateProgressBar();
-        }
-
-        function getRandomQuestions(questions, count) {
-            const uniqueQuestions = [...new Map(questions.map(q => [q.id, q])].map(([_, q]) => q);
+            currentQuestionIndex = index;
+            startTime = Date.now();
             
-            if (uniqueQuestions.length < count) {
-                alert(`Atenção: Há apenas ${uniqueQuestions.length} questões únicas disponíveis.`);
-                count = uniqueQuestions.length;
-            }
-            
-            const shuffled = [...uniqueQuestions].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, count);
-        }
-
-        function getMostMistakenQuestions(questions, count) {
-            const questionsWithMistakes = questions.map((q, index) => ({
-                ...q,
-                index,
-                mistakes: testStatistics.questionMistakes[index] || 0
-            }));
-            
-            questionsWithMistakes.sort((a, b) => b.mistakes - a.mistakes);
-            const mostMistaken = questionsWithMistakes.slice(0, count);
-            
-            return mostMistaken.sort((a, b) => {
-                if (a.mistakes === b.mistakes) return 0.5 - Math.random();
-                return 0;
-            });
-        }
-
-        // Exibir questão atual
-        function displayCurrentQuestion() {
-            const question = currentTestQuestions[currentQuestionIndex];
-            
-            currentQuestionDiv.innerHTML = `
-                <div class="question-container" id="questionContainer">
-                    <div class="question-number">Questão ${currentQuestionIndex + 1} de ${currentTestQuestions.length}</div>
-                    <div class="question-text">${question.enunciado}</div>
-                    <div class="options" id="optionsContainer"></div>
-                    <div class="correct-answer" id="correctAnswer">Resposta correta: ${question.correta.toUpperCase()}</div>
-                    ${question.explicacao ? `<div class="explanation" id="explanation">Explicação: ${question.explicacao}</div>` : ''}
-                </div>
-            `;
-            
-            const optionsContainer = document.getElementById('optionsContainer');
-            const correctAnswerDiv = document.getElementById('correctAnswer');
-            const explanationDiv = document.getElementById('explanation');
+            const question = currentTestQuestions[index];
             const questionContainer = document.getElementById('questionContainer');
             
-            Object.entries(question.alternativas).forEach(([letter, text]) => {
-                const optionId = `option-${currentQuestionIndex}-${letter}`;
-                const isChecked = userAnswers[currentQuestionIndex] === letter ? 'checked' : '';
-                
-                optionsContainer.innerHTML += `
-                    <label class="option" for="${optionId}">
-                        <input type="radio" id="${optionId}" name="question-${currentQuestionIndex}" value="${letter}" ${isChecked}>
-                        <span class="option-text">${letter.toUpperCase()}) ${text}</span>
+            let html = `
+                <div class="question-container" id="currentQuestion">
+                    <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
+                    <div class="question-text">${question.enunciado}</div>
+            `;
+            
+            if (question.imagem) {
+                html += `<div class="question-image">
+                    <img src="${question.imagem}" alt="Imagem da questão" style="max-width: 100%; height: auto;">
+                </div>`;
+            }
+            
+            html += `<div class="options">`;
+            
+            for (const [key, value] of Object.entries(question.alternativas)) {
+                const isChecked = userAnswers[index] === key ? 'checked' : '';
+                html += `
+                    <label class="option">
+                        <input type="radio" name="answer" value="${key}" ${isChecked}>
+                        <span class="option-text">${key.toUpperCase()}) ${value}</span>
                     </label>
                 `;
-            });
-            
-            if (userAnswers[currentQuestionIndex] !== undefined) {
-                correctAnswerDiv.style.display = 'block';
-                if (explanationDiv) explanationDiv.style.display = 'block';
-                
-                if (userAnswers[currentQuestionIndex] === question.correta) {
-                    questionContainer.classList.add('correct');
-                } else {
-                    questionContainer.classList.add('incorrect');
-                }
             }
             
-            optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+            html += `</div></div>`;
+            
+            questionContainer.innerHTML = html;
+            
+            document.querySelectorAll('input[name="answer"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    userAnswers[currentQuestionIndex] = this.value;
-                    
-                    if (this.checked && !radio.hasAttribute('data-answered')) {
-                        answeredQuestions++;
-                        answeredInBlock++;
-                        
-                        if (this.value === question.correta) {
-                            correctInBlock++;
-                        }
-                        
-                        updateProgressBar();
-                        radio.setAttribute('data-answered', 'true');
-                        
-                        if (answeredInBlock === 5) {
-                            showFeedbackOnNext = true;
-                        }
-                    }
-                    
-                    updateNavigationButtons();
-                    showInstantFeedback();
+                    userAnswers[index] = this.value;
+                    saveAnswer(index, this.value);
                 });
             });
             
-            updateNavigationButtons();
-            showInstantFeedback();
+            document.getElementById('prevButton').disabled = index === 0;
+            document.getElementById('nextButton').disabled = index === currentTestQuestions.length - 1;
+            document.getElementById('submitButton').style.display = 
+                (index === currentTestQuestions.length - 1 && userAnswers[index] !== null) ? 'block' : 'none';
+            
+            if ((index + 1) % questionsPerFeedback === 0 && index > 0) {
+                showFeedback(index + 1);
+            }
         }
 
-        function showBlockFeedback() {
-            const totalInBlock = 5;
-            const incorrectInBlock = totalInBlock - correctInBlock;
-            const percentage = Math.round((correctInBlock / totalInBlock) * 100);
+        function saveAnswer(index, answer) {
+            userAnswers[index] = answer;
             
-            feedbackTotal.textContent = totalInBlock;
-            feedbackCorrect.textContent = correctInBlock;
-            feedbackIncorrect.textContent = incorrectInBlock;
-            feedbackPercentage.textContent = percentage;
-            
-            feedbackMistakes.innerHTML = '';
-            
-            const lastFiveQuestions = [];
-            let count = 0;
-            for (let i = currentQuestionIndex; i >= 0 && count < 5; i--) {
-                if (userAnswers[i] !== undefined) {
-                    lastFiveQuestions.unshift(i);
-                    count++;
-                }
+            if (index === currentTestQuestions.length - 1) {
+                document.getElementById('submitButton').style.display = 'block';
             }
-            
-            const wrongQuestions = lastFiveQuestions.filter(index => 
-                userAnswers[index] !== currentTestQuestions[index].correta
-            );
-            
-            if (wrongQuestions.length > 0) {
-                const mistakesTitle = document.createElement('div');
-                mistakesTitle.textContent = 'Questões erradas:';
-                mistakesTitle.style.fontWeight = '600';
-                mistakesTitle.style.marginBottom = '15px';
-                mistakesTitle.style.fontSize = '1.1rem';
-                feedbackMistakes.appendChild(mistakesTitle);
-                
-                wrongQuestions.forEach(index => {
-                    const question = currentTestQuestions[index];
-                    const userAnswer = userAnswers[index];
-                    
-                    const mistakeItem = document.createElement('div');
-                    mistakeItem.className = 'feedback-mistake-item';
-                    
-                    const questionText = document.createElement('div');
-                    questionText.className = 'feedback-mistake-question';
-                    questionText.textContent = `Questão ${index + 1}: ${question.enunciado.substring(0, 50)}${question.enunciado.length > 50 ? '...' : ''}`;
-                    mistakeItem.appendChild(questionText);
-                    
-                    const correctOption = document.createElement('div');
-                    correctOption.className = 'feedback-mistake-option feedback-mistake-correct';
-                    correctOption.textContent = `✅ Correta: ${question.correta.toUpperCase()}) ${question.alternativas[question.correta]}`;
-                    mistakeItem.appendChild(correctOption);
-                    
-                    const selectedOption = document.createElement('div');
-                    selectedOption.className = 'feedback-mistake-option feedback-mistake-selected';
-                    selectedOption.textContent = `❌ Sua resposta: ${userAnswer.toUpperCase()}) ${question.alternativas[userAnswer]}`;
-                    mistakeItem.appendChild(selectedOption);
-                    
-                    if (question.explicacao) {
-                        const explanation = document.createElement('div');
-                        explanation.className = 'feedback-mistake-option';
-                        explanation.textContent = `💡 Explicação: ${question.explicacao.substring(0, 100)}${question.explicacao.length > 100 ? '...' : ''}`;
-                        explanation.style.fontStyle = 'italic';
-                        mistakeItem.appendChild(explanation);
-                    }
-                    
-                    feedbackMistakes.appendChild(mistakeItem);
-                });
-            } else {
-                const noMistakes = document.createElement('div');
-                noMistakes.textContent = 'Nenhuma questão errada neste bloco!';
-                noMistakes.style.textAlign = 'center';
-                noMistakes.style.fontStyle = 'italic';
-                noMistakes.style.fontSize = '1.1rem';
-                feedbackMistakes.appendChild(noMistakes);
-            }
-            
-            feedbackPopup.classList.add('active');
-            answeredInBlock = 0;
-            correctInBlock = 0;
-            showFeedbackOnNext = false;
         }
 
-        function showInstantFeedback() {
-            const question = currentTestQuestions[currentQuestionIndex];
-            const userAnswer = userAnswers[currentQuestionIndex];
-            
-            if (userAnswer === undefined || userAnswer === null) {
-                instantFeedback.style.display = 'none';
-                return;
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                showQuestion(currentQuestionIndex - 1);
             }
-            
-            const isCorrect = userAnswer === question.correta;
-            
-            instantFeedback.textContent = isCorrect 
-                ? `✅ Resposta correta! (${question.correta.toUpperCase()})` 
-                : `❌ Resposta incorreta! A correta é ${question.correta.toUpperCase()}`;
-            
-            instantFeedback.className = isCorrect ? 'instant-feedback correct' : 'instant-feedback incorrect';
-            instantFeedback.style.display = 'block';
-            
-            setTimeout(() => {
-                instantFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
+        }
+
+        function showNextQuestion() {
+            if (currentQuestionIndex < currentTestQuestions.length - 1) {
+                showQuestion(currentQuestionIndex + 1);
+            }
         }
 
         function updateProgressBar() {
-            const progress = (answeredQuestions / currentTestQuestions.length) * 100;
-            progressBar.style.width = `${progress}%`;
-        }
-
-        function updateNavigationButtons() {
-            prevBtn.disabled = currentQuestionIndex === 0;
-            
-            if (currentQuestionIndex === currentTestQuestions.length - 1) {
-                nextBtn.style.display = 'none';
-                finishBtn.style.display = 'block';
-            } else {
-                nextBtn.style.display = 'block';
-                finishBtn.style.display = 'none';
-            }
-        }
-
-        function nextQuestion() {
-            showInstantFeedback();
-            
-            if (showFeedbackOnNext) {
-                showBlockFeedback();
-            } else {
-                setTimeout(() => {
-                    if (currentQuestionIndex < currentTestQuestions.length - 1) {
-                        currentQuestionIndex++;
-                        displayCurrentQuestion();
-                        instantFeedback.style.display = 'none';
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                }, 800);
-            }
-        }
-
-        function previousQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                displayCurrentQuestion();
-                showInstantFeedback();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            const answeredCount = userAnswers.filter(answer => answer !== null).length;
+            const progress = (answeredCount / currentTestQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
         }
 
         function finishTest() {
-            showInstantFeedback();
+            if (startTime !== null) {
+                questionTimes[currentQuestionIndex] = (Date.now() - startTime) / 1000;
+            }
             
-            setTimeout(() => {
-                currentTestQuestions.forEach((question, index) => {
-                    if (userAnswers[index] === question.correta) {
-                        testStatistics.correct.push(index);
-                        
-                        if (question.area) {
-                            testStatistics.performanceByArea[question.area] = 
-                                (testStatistics.performanceByArea[question.area] || 0) + 1;
-                        }
-                    } else {
-                        testStatistics.incorrect.push(index);
-                        
-                        const originalIndex = allQuestions.findIndex(q => q.id === question.id);
-                        if (originalIndex !== -1) {
-                            testStatistics.questionMistakes[originalIndex] = 
-                                (testStatistics.questionMistakes[originalIndex] || 0) + 1;
-                        }
-                    }
-                });
-                
-                const correctPercentage = ((testStatistics.correct.length / currentTestQuestions.length) * 100).toFixed(1);
-                const finalScore = ((testStatistics.correct.length / currentTestQuestions.length) * 10).toFixed(1);
-                
-                testStatistics.attemptsHistory.push({
-                    date: new Date().toLocaleString(),
-                    correct: testStatistics.correct.length,
-                    total: currentTestQuestions.length,
-                    score: finalScore,
-                    incorrect: testStatistics.incorrect,
-                    attemptNumber: currentAttempt,
-                    isMistakesTest: currentAttempt % 6 === 0
-                });
-                
-                localStorage.setItem('testHistory', JSON.stringify({
-                    attempts: testStatistics.attemptsHistory,
-                    mistakes: testStatistics.questionMistakes,
-                    attemptCount: currentAttempt
-                }));
-                
-                showResultsPage(finalScore, correctPercentage);
-            }, 800);
-        }
-
-        function showResultsPage(score, percentage) {
-            quizPage.style.display = 'none';
-            resultsPage.style.display = 'block';
+            calculateResults();
             
-            finalScoreText.textContent = `Nota Final: ${score}/10`;
-            finalPercentageText.textContent = `Você acertou ${testStatistics.correct.length} de ${currentTestQuestions.length} questões (${percentage}%)`;
+            document.getElementById('quizPage').style.display = 'none';
+            document.getElementById('resultsPage').style.display = 'block';
             
             generateCharts();
-            generateAdditionalCharts();
-            generateQuestionsAnalysis();
         }
 
-        function destroyCharts() {
-            Object.values(charts).forEach(chart => {
-                if (chart) chart.destroy();
+        function calculateResults() {
+            testStatistics.correct = [];
+            testStatistics.incorrect = [];
+            
+            for (let i = 0; i < currentTestQuestions.length; i++) {
+                const question = currentTestQuestions[i];
+                const userAnswer = userAnswers[i];
+                
+                if (userAnswer === question.correta) {
+                    testStatistics.correct.push(i);
+                } else {
+                    testStatistics.incorrect.push(i);
+                    
+                    if (!testStatistics.mistakesByQuestion[i]) {
+                        testStatistics.mistakesByQuestion[i] = 0;
+                    }
+                    testStatistics.mistakesByQuestion[i]++;
+                }
+            }
+            
+            const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
+            testStatistics.attemptsHistory.push({
+                date: new Date().toISOString(),
+                score: score.toFixed(1),
+                correct: testStatistics.correct.length,
+                total: currentTestQuestions.length
             });
+            
+            testStatistics.attemptsCount++;
+            
+            if (testStatistics.attemptsCount % 4 === 0) {
+                // Próxima prova focada nos erros
+            }
+            
+            if (testStatistics.attemptsCount >= 20) {
+                testStatistics = {
+                    attemptsHistory: [],
+                    correct: [],
+                    incorrect: [],
+                    mistakesByQuestion: {},
+                    attemptsCount: 0
+                };
+            }
         }
 
         function generateCharts() {
@@ -638,9 +335,6 @@
                 },
                 options: getChartOptions('Desempenho Geral', textColor)
             });
-            
-            // Gráfico de erros por questão
-            generateMistakesChart();
             
             // Gráfico de progresso
             const progressCtx = document.getElementById('progressChart').getContext('2d');
@@ -677,36 +371,7 @@
                 })
             });
             
-            // Gráfico de acertos por área
-            const areasCtx = document.getElementById('areasChart').getContext('2d');
-            if (Object.keys(testStatistics.performanceByArea).length > 0) {
-                const areas = Object.keys(testStatistics.performanceByArea);
-                const areaCounts = Object.values(testStatistics.performanceByArea);
-                
-                charts.areas = new Chart(areasCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: areas,
-                        datasets: [{
-                            label: 'Acertos',
-                            data: areaCounts,
-                            backgroundColor: correctColor,
-                            borderColor: borderColor,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: getChartOptions('Acertos por Área', textColor)
-                });
-            } else {
-                document.querySelector('#areasChart').closest('.stat-card').style.display = 'none';
-            }
-        }
-
-        function generateMistakesChart() {
-            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            
+            // Gráfico de erros por questão
             const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
             const mistakesData = countMistakesByQuestion();
             
@@ -726,7 +391,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: Math.max(...mistakesData.values) + 2 || 10,
+                            max: 20,
                             ticks: { color: textColor, stepSize: 1 },
                             grid: { color: borderColor }
                         }
@@ -744,42 +409,37 @@
                     }
                 })
             });
+            
+            generateAdditionalCharts();
+            updateTextResults();
+            generateQuestionsReview();
         }
 
         function countMistakesByQuestion() {
-            const mistakesCount = {};
-            const result = {
-                labels: [],
-                values: [],
-                questions: []
-            };
+            const labels = [];
+            const values = [];
+            const questions = [];
             
-            testStatistics.attemptsHistory.forEach(attempt => {
-                attempt.incorrect.forEach(qIndex => {
-                    if (currentTestQuestions[qIndex]) {
-                        mistakesCount[qIndex] = (mistakesCount[qIndex] || 0) + 1;
-                    }
-                });
+            const sortedEntries = Object.entries(testStatistics.mistakesByQuestion)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            sortedEntries.forEach(([qIndex, count]) => {
+                labels.push(`Q${parseInt(qIndex) + 1}`);
+                values.push(count);
+                questions.push(parseInt(qIndex));
             });
             
-            const sortedQuestions = Object.keys(mistakesCount).sort((a, b) => mistakesCount[b] - mistakesCount[a]);
-            const topQuestions = sortedQuestions.slice(0, 10);
-            
-            topQuestions.forEach(qIndex => {
-                result.labels.push(`Q${parseInt(qIndex) + 1}`);
-                result.values.push(mistakesCount[qIndex]);
-                result.questions.push(qIndex);
-            });
-            
-            return result;
+            return { labels, values, questions };
         }
 
         function generateAdditionalCharts() {
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
             const borderColor = getComputedStyle(document.body).getPropertyValue('--gray');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
+            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-
+            
             // Gráfico de distribuição de dificuldade
             const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
             charts.difficulty = new Chart(difficultyCtx, {
@@ -795,11 +455,12 @@
                 },
                 options: getChartOptions('Distribuição de Dificuldade', textColor)
             });
-
+            
             // Gráfico de tempo por questão
             const timeCtx = document.getElementById('timePerQuestionChart').getContext('2d');
             const timeLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const timeData = Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30);
+            const timeData = questionTimes.length > 0 ? questionTimes : 
+                Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 120) + 30);
             
             charts.timePerQuestion = new Chart(timeCtx, {
                 type: 'bar',
@@ -827,7 +488,7 @@
                     }
                 })
             });
-
+            
             // Gráfico de evolução do desempenho
             const evolutionCtx = document.getElementById('performanceEvolutionChart').getContext('2d');
             const evolutionLabels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
@@ -872,77 +533,258 @@
             });
         }
 
-        function getChartOptions(title, textColor, customOptions = {}) {
+        function getChartOptions(title, textColor, additionalOptions = {}) {
             return {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom',
                         labels: {
-                            color: textColor,
-                            font: {
-                                family: 'Poppins',
-                                size: 12
-                            }
+                            color: textColor
                         }
                     },
                     title: {
-                        display: false
+                        display: true,
+                        text: title,
+                        color: textColor,
+                        font: {
+                            size: 16
+                        }
                     }
                 },
-                ...customOptions
+                ...additionalOptions
             };
         }
 
-        function generateQuestionsAnalysis() {
-            questionsAnalysis.innerHTML = '';
+        function updateTextResults() {
+            const correctCount = testStatistics.correct.length;
+            const totalQuestions = currentTestQuestions.length;
+            const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
             
-            currentTestQuestions.forEach((question, index) => {
-                const userAnswer = userAnswers[index];
+            document.getElementById('finalScore').textContent = `${correctCount}/${totalQuestions}`;
+            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto`;
+        }
+
+        function generateQuestionsReview() {
+            const reviewContainer = document.getElementById('questionsReview');
+            let html = '<h2>Revisão das Questões</h2>';
+            
+            for (let i = 0; i < currentTestQuestions.length; i++) {
+                const question = currentTestQuestions[i];
+                const userAnswer = userAnswers[i];
                 const isCorrect = userAnswer === question.correta;
-                const questionDiv = document.createElement('div');
-                questionDiv.className = `question-result ${isCorrect ? 'correct' : 'incorrect'}`;
                 
-                let optionsHtml = '';
-                Object.entries(question.alternativas).forEach(([letter, text]) => {
-                    const isUserAnswer = letter === userAnswer;
-                    const isCorrectAnswer = letter === question.correta;
+                html += `
+                    <div class="question-result ${isCorrect ? 'correct' : 'incorrect'}">
+                        <div class="question-number">Questão ${i + 1}</div>
+                        <div class="question-text">${question.enunciado}</div>
+                        <div class="question-result-options">
+                `;
+                
+                for (const [key, value] of Object.entries(question.alternativas)) {
+                    const isUserChoice = userAnswer === key;
+                    const isCorrectAnswer = question.correta === key;
                     
                     let optionClass = '';
                     if (isCorrectAnswer) {
                         optionClass = 'correct';
-                    } else if (isUserAnswer) {
+                    } else if (isUserChoice && !isCorrect) {
                         optionClass = 'selected';
                     }
                     
-                    optionsHtml += `
+                    html += `
                         <div class="question-result-option ${optionClass}">
-                            ${letter.toUpperCase()}) ${text}
-                            ${isCorrectAnswer ? ' (Correta)' : ''}
-                            ${isUserAnswer && !isCorrectAnswer ? ' (Sua resposta)' : ''}
+                            ${key.toUpperCase()}) ${value}
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                        ${!isCorrect ? `<div class="correct-answer">Resposta correta: ${question.correta.toUpperCase()}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            reviewContainer.innerHTML = html;
+        }
+
+        function showFeedback(completedCount) {
+            const currentAnswers = userAnswers.slice(0, completedCount);
+            const currentQuestions = currentTestQuestions.slice(0, completedCount);
+            
+            let correctCount = 0;
+            const wrongQuestions = [];
+            
+            for (let i = 0; i < completedCount; i++) {
+                if (currentAnswers[i] === currentQuestions[i].correta) {
+                    correctCount++;
+                } else if (currentAnswers[i] !== null) {
+                    wrongQuestions.push(i);
+                }
+            }
+            
+            document.getElementById('feedbackCompleted').textContent = completedCount;
+            document.getElementById('feedbackCorrect').textContent = correctCount;
+            document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
+            document.getElementById('feedbackPercentage').textContent = 
+                `${((correctCount / completedCount) * 100).toFixed(1)}% de acerto`;
+            
+            const mistakesContainer = document.getElementById('feedbackMistakes');
+            mistakesContainer.innerHTML = '';
+            
+            if (wrongQuestions.length > 0) {
+                mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
+                
+                wrongQuestions.forEach(index => {
+                    const question = currentQuestions[index];
+                    const userAnswer = currentAnswers[index];
+                    
+                    mistakesContainer.innerHTML += `
+                        <div class="feedback-mistake-item">
+                            <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
+                    `;
+                    
+                    if (userAnswer) {
+                        mistakesContainer.innerHTML += `
+                            <div class="feedback-mistake-option selected">
+                                Sua resposta: ${userAnswer.toUpperCase()}) ${question.alternativas[userAnswer]}
+                            </div>
+                        `;
+                    }
+                    
+                    mistakesContainer.innerHTML += `
+                        <div class="feedback-mistake-option correct">
+                            Resposta correta: ${question.correta.toUpperCase()}) ${question.alternativas[question.correta]}
                         </div>
                     `;
                 });
-                
-                questionDiv.innerHTML = `
-                    <h4>Questão ${index + 1} - ${isCorrect ? 'Acertou' : 'Errou'}</h4>
-                    <p><strong>Enunciado:</strong> ${question.enunciado}</p>
-                    <div class="question-result-options">${optionsHtml}</div>
-                    ${question.explicacao ? `<p><strong>Explicação:</strong> ${question.explicacao}</p>` : ''}
-                `;
-                
-                questionsAnalysis.appendChild(questionDiv);
+            } else {
+                mistakesContainer.innerHTML = '<p>Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
+            }
+            
+            document.getElementById('feedbackPopup').classList.add('active');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackPopup').classList.remove('active');
+        }
+
+        function restartTest() {
+            document.getElementById('quizPage').style.display = 'block';
+            document.getElementById('resultsPage').style.display = 'none';
+            
+            if (testStatistics.attemptsCount % 4 === 0) {
+                currentTestQuestions = generateWeaknessQuestions(totalQuestions);
+            } else {
+                currentTestQuestions = generateRandomQuestions(totalQuestions);
+            }
+            
+            userAnswers = new Array(currentTestQuestions.length).fill(null);
+            questionTimes = new Array(currentTestQuestions.length).fill(0);
+            
+            currentQuestionIndex = 0;
+            showQuestion(currentQuestionIndex);
+            updateProgressBar();
+            
+            Object.values(charts).forEach(chart => {
+                if (chart) chart.destroy();
             });
         }
 
-        function startNewAttempt() {
-            initializeTest();
+        function reviewQuestions() {
+            alert("Função de revisão de questões será implementada aqui.");
         }
 
-        function loadNewFile() {
-            location.reload();
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.getElementById('resultsPage').style.display !== 'none') {
+                generateCharts();
+            }
         }
+
+        // =============================================
+        // BANCO DE QUESTÕES - EDITÁVEL
+        // =============================================
+        const sampleQuestions = [
+            {
+                enunciado: "Na tabela abaixo estão os resultados de exames de 4 pacientes gestantes. Assinale a alternativa que apresenta a correta interpretação quanto ao nivel da glicemia em cada caso.",
+                imagem: "Tutoriam2.pdf#page=1",
+                alternativas: {
+                    a: "Pcte1: Intolerancia a Glicose, pcte 2 glicemia de jejum alterada, pcte 3 normal, pcte 4 Diabetes Mellitus.",
+                    b: "Pcte1: Glicemia de Jejum alterada, pcte 2 Intolerância a glicose, pcte 3 Diabetes Melliitus, pcte 4 Normal.",
+                    c: "Pcte1: Diabetes Mellitus, pcte 2 normal, pcte 3 glicemia de jejum alterada , pcte 4 Normal.",
+                    d: "Pcte1: normal, pcte 2 glicemia de jejum alterada, pcte 3 Intolerância a glicose, pcte 4 Diabetes Mellitus."
+                },
+                correta: "d"
+            },
+            {
+                enunciado: "Com relação ao desenvolvimento das glândulas mamárias no sexo feminino, assinale a alternativa correta:",
+                imagem: null,
+                alternativas: {
+                    a: "Inicia-se no período puberal e só atinge o ápice do seu crescimento e desenvolvimento durante a gestação e amamentação.",
+                    b: "Inicia-se na telarca, período no qual ocorre o crescimento da tumescência areolar como resposta à atividade uterina e ovariana.",
+                    c: "Inicia-se na telarca, período no qual o tecido mamário se desenvolve com o crescimento dos componentes glandulares.",
+                    d: "Inicia-se no período puberal e só atinge o ápice do seu crescimento e desenvolvimento na fase adulta da mulher, sendo gestante ou não."
+                },
+                correta: "a"
+            },
+            {
+                enunciado: "Assinale a alternativa mais correta que indica um fator que pode ser considerado importante para a liberação da ação lactogênica da prolactina.",
+                imagem: null,
+                alternativas: {
+                    a: "A diminuição dos níveis de cortisol livre no plasma, observada no pós-parto, devido ao aumento do nível circulante de globulinas transportadoras de corticóides, cuja síntese é estimulada pelos estrógenos.",
+                    b: "A diminuição da concentração plasmática de estrógenos, observadas durante o parto, ocorre devido ao aumento do nível circulante de globulinas transportadoras de corticoides, cuja síntese é estimulada pelo cortisol livre.",
+                    c: "A elevação dos níveis de cortisol livre no plasma, observada no pós-parto, devido a queda do nível circulante de globulinas transportadoras de corticóides, cuja síntese é estimulada pelos estrógenos.",
+                    d: "A elevação da concentração plasmática de estrógenos, observada no parto, ocorre devido a queda do nível circulante de globulinas transportadoras de corticoides, cuja síntese é estimulada pelos corticosteróides."
+                },
+                correta: "c"
+            },
+            {
+                enunciado: "Sobre a ação da prolactina nos seus receptores mamários, assinale a alternativa mais correta.",
+                imagem: null,
+                alternativas: {
+                    a: "Com o parto e a degutação há aumento abrupto dos níveis de hormônios circulantes produzidos pela placenta.",
+                    b: "Na apojadura ocorre aumento abrupto dos níveis de hormônios circulantes produzidos pela placenta.",
+                    c: "Com o parto e a degutação há queda abrupta dos níveis de hormônios circulantes produzidos pela placenta.",
+                    d: "Na apojadura, que ocorre 3 dias após o trabalho de parto, há diminuição de estrógeno e aumento do hormônio lactogênico placentário."
+                },
+                correta: "c"
+            },
+            {
+                enunciado: "Assinale a alternativa que indica os períodos corretos da gestação onde ocorre, respectivamente: o aumento da produção de prolactina e as mudanças de coloração e pigmentação já evidentes nas aréolas mamárias.",
+                imagem: null,
+                alternativas: {
+                    a: "No 3o trimestre e no 2o trimestre de gestação.",
+                    b: "No 1o trimestre e no 2o trimestre de gestação.",
+                    c: "No 2o trimestre e no 1o trimestre de gestação.",
+                    d: "No 3o trimestre e no 1o trimestre de gestação."
+                },
+                correta: "c"
+            },
+            {
+                enunciado: "Nas várias etapas de vida da mulher, as mamas passam por diversos processos de preparo. Assinale a alternativa correta relacionada à puberdade, em mulheres não gestantes.",
+                imagem: null,
+                alternativas: {
+                    a: "A mamogênese ocorre com a contribuição da prolactina e da progesterona que promovem o crescimento dos ductos galactóforos, enquanto que os estrógenos atuam com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
+                    b: "A mamogênese ocorre com a contribuição dos estrógenos que promovem o crescimento dos ductos galactóforos, enquanto que a prolactina e a progesterona atuam com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
+                    c: "A galactogênese ocorre com a contribuição dos estrógenos e prolactina que promovem o crescimento dos ductos galactóforos, enquanto que a progesterona atua com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
+                    d: "A galactogênese ocorre com a contribuição dos estrógenos e da progesterona que promovem o crescimento dos ductos galactóforos, enquanto que a prolactina atua com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar."
+                },
+                correta: "c"
+            },
+            {
+                enunciado: "O processo de lactação pode ser dividido em estágios, entre eles o estágio (A) que corresponde ao crescimento e desenvolvimento da glândula mamária, ocorrendo durante todo o período gestacional e o estágio (B) que é a manutenção da lactação já estabelecida e que depende da duração e da frequência do ato de mamar. (A) e (B) correspondem respectivamente aos seguintes estágios da amamentação:",
+                imagem: null,
+                alternativas: {
+                    a: "Mamogênese e lactogênese.",
+                    b: "Lactogênese e lactopoese.",
+                    c: "Lactogênese e ejeção do leite.",
+                    d: "Mamogênese e lactopoese."
+                },
+                correta: "d"
+            }
+        ];
     </script>
 </body>
 </html>
