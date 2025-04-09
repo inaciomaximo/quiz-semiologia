@@ -284,12 +284,12 @@
     </div>
 
     <!-- Popup de Imagem -->
-    <div class="image-popup" id="imagePopup">
-        <div class="image-popup-content">
-            <button class="image-popup-close" id="imagePopupClose">&times;</button>
-            <img id="popupImage" class="image-popup-img" src="" alt="Imagem ampliada da questão">
-        </div>
+<div class="image-popup" id="imagePopup">
+    <div class="image-popup-content">
+        <button class="image-popup-close" id="imagePopupClose" onclick="closeImagePopup()">&times;</button>
+        <img id="popupImage" class="image-popup-img" src="" alt="Imagem ampliada da questão">
     </div>
+</div>
 
     <script>
         // Configuração do PDF.js
@@ -454,9 +454,23 @@ function showImagePopup(pdfPageSpec) {
     });
 }
 
-        function closeImagePopup() {
-            document.getElementById('imagePopup').classList.remove('active');
-        }
+       function closeImagePopup() {
+    const popup = document.getElementById('imagePopup');
+    
+    // Adiciona uma transição suave
+    popup.style.transition = 'all 0.3s ease';
+    popup.style.opacity = '0';
+    popup.style.visibility = 'hidden';
+    
+    // Remove completamente o popup após a animação
+    setTimeout(() => {
+        popup.classList.remove('active');
+        popup.style.transition = '';
+    }, 300);
+    
+    // Para garantir que o evento não propague
+    return false;
+}
 
         function updateNavigationButtons() {
             document.getElementById('prevButton').disabled = currentQuestionIndex === 0;
