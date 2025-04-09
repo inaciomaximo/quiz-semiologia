@@ -11,6 +11,42 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
 
     <style>
+/* Estilos para o feedback instantâneo */
+.instant-feedback {
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    display: none;
+}
+
+.instant-feedback.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.instant-feedback.correct {
+    background-color: rgba(46, 204, 113, 0.2);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+}
+
+.instant-feedback.incorrect {
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+}
+
+.instant-feedback-icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+        
 .final-score {
     font-size: 2.5rem;
     font-weight: bold;
@@ -227,13 +263,6 @@
     visibility: visible;
 }
 
-
-
-
-
-
-
-
 .image-popup-content {
     position: relative;
     max-width: 90%;
@@ -252,17 +281,7 @@
     display: block;
     margin: 0 auto;
 }
-
-
-
-
-
-
-
-
-
-
-
+        
 .image-popup-close {
     position: absolute;
     top: 10px;
@@ -567,7 +586,15 @@
         `;
     }
 
-    html += `</div></div>`;
+    html += `</div>`; // Fecha div options
+
+    // Adiciona o container do feedback instantâneo (inicialmente vazio e escondido)
+    html += `<div id="instantFeedback" class="instant-feedback">
+                <span class="instant-feedback-icon"></span>
+                <span class="instant-feedback-message"></span>
+            </div>`;
+
+    html += `</div>`; // Fecha div question-container
 
     questionContainer.innerHTML = html;
 
@@ -576,7 +603,7 @@
         radio.addEventListener('change', function() {
             userAnswers[index] = this.value;
             saveAnswer(index, this.value);
-
+            
             // Verificar se devemos mostrar feedback após responder a questão
             if ((index + 1) % questionsPerFeedback === 0) {
                 showFeedback(index + 1);
@@ -586,8 +613,53 @@
 
     // Atualizar botões de navegação
     updateNavigationButtons();
+
+    // Configurar evento do botão "Próxima" para mostrar feedback
+    document.getElementById('nextButton').onclick = function() {
+        const selectedOption = document.querySelector('input[name="answer"]:checked');
+        
+        if (!selectedOption && userAnswers[currentQuestionIndex] === null) {
+            alert("Por favor, selecione uma resposta antes de continuar.");
+            return;
+        }
+
+        showInstantFeedback(currentQuestionIndex);
+        
+        // Esperar 1 segundo antes de mudar de questão (para o feedback ser visível)
+        setTimeout(() => {
+            if (currentQuestionIndex < currentTestQuestions.length - 1) {
+                showQuestion(currentQuestionIndex + 1);
+            }
+        }, 1000);
+    };
 }
 
+// Nova função para mostrar feedback instantâneo
+function showInstantFeedback(questionIndex) {
+    const feedback = document.getElementById('instantFeedback');
+    const feedbackIcon = feedback.querySelector('.instant-feedback-icon');
+    const feedbackMessage = feedback.querySelector('.instant-feedback-message');
+    
+    const currentQuestion = currentTestQuestions[questionIndex];
+    const userAnswer = userAnswers[questionIndex];
+    
+    if (userAnswer === currentQuestion.correta) {
+        feedback.className = 'instant-feedback correct show';
+        feedbackIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        feedbackMessage.textContent = 'Resposta correta!';
+    } else {
+        feedback.className = 'instant-feedback incorrect show';
+        feedbackIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+        feedbackMessage.textContent = `Resposta incorreta. A correta é ${currentQuestion.correta.toUpperCase()}.`;
+    }
+    
+    // Esconder o feedback após 3 segundos (se ainda estiver na mesma questão)
+    setTimeout(() => {
+        if (currentQuestionIndex === questionIndex) {
+            feedback.classList.remove('show');
+        }
+    }, 3000);
+}
 function showImagePopup(pdfPageSpec) {
     // Extrair o nome do arquivo e número da página
     const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
@@ -658,12 +730,50 @@ function showImagePopup(pdfPageSpec) {
             }
         }
 
-        function showNextQuestion() {
-            if (currentQuestionIndex < currentTestQuestions.length - 1) {
-                showQuestion(currentQuestionIndex + 1);
-            }
-        }
+function showNextQuestion() {
+    // Verificar se há resposta selecionada
+    const selectedOption = document.querySelector('input[name="answer"]:checked');
+    
+    if (!selectedOption && userAnswers[currentQuestionIndex] === null) {
+        alert("Por favor, selecione uma resposta antes de continuar.");
+        return;
+    }
 
+    // Mostrar feedback instantâneo
+    showInstantFeedback();
+
+    // Esperar um pouco antes de mudar de questão (para o feedback ser visível)
+    setTimeout(() => {
+        if (currentQuestionIndex < currentTestQuestions.length - 1) {
+            showQuestion(currentQuestionIndex + 1);
+        }
+    }, 1000); // 1 segundo de delay
+}
+        
+function showInstantFeedback() {
+    const feedback = document.getElementById('instantFeedback');
+    const feedbackIcon = feedback.querySelector('.instant-feedback-icon');
+    const feedbackMessage = feedback.querySelector('.instant-feedback-message');
+    
+    const currentQuestion = currentTestQuestions[currentQuestionIndex];
+    const userAnswer = userAnswers[currentQuestionIndex];
+    
+    if (userAnswer === currentQuestion.correta) {
+        feedback.className = 'instant-feedback correct show';
+        feedbackIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        feedbackMessage.textContent = 'Resposta correta!';
+    } else {
+        feedback.className = 'instant-feedback incorrect show';
+        feedbackIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+        feedbackMessage.textContent = `Resposta incorreta. A correta é ${currentQuestion.correta.toUpperCase()}.`;
+    }
+    
+    // Esconder o feedback após 3 segundos
+    setTimeout(() => {
+        feedback.classList.remove('show');
+    }, 3000);
+}
+        
         function updateProgressBar() {
             const answeredCount = userAnswers.filter(answer => answer !== null).length;
             const progress = (answeredCount / currentTestQuestions.length) * 100;
