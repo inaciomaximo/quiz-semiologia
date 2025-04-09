@@ -9,7 +9,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
+.home-button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 10px 15px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
 
+.home-button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
         
         /* Estilos para a caixa de imagem */
         .image-box {
@@ -22,7 +46,7 @@
             background-color: var(--white);
             box-shadow: var(--shadow);
         }
-        
+
         .image-placeholder {
             padding: 30px;
             text-align: center;
@@ -32,12 +56,12 @@
             transition: var(--transition);
             font-weight: 500;
         }
-        
+
         .image-placeholder:hover {
             background-color: var(--gray);
             color: var(--white);
         }
-        
+
         /* Popup de imagem */
         .image-popup {
             position: fixed;
@@ -54,12 +78,12 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-        
+
         .image-popup.active {
             opacity: 1;
             visibility: visible;
         }
-        
+
         .image-popup-content {
             position: relative;
             max-width: 90%;
@@ -71,14 +95,14 @@
             padding: 20px;
             box-shadow: var(--shadow);
         }
-        
+
         .image-popup-img {
             max-width: 100%;
             max-height: 80vh;
             display: block;
             margin: 0 auto;
         }
-        
+
         .image-popup-close {
             position: absolute;
             top: 10px;
@@ -95,33 +119,7 @@
             align-items: center;
             justify-content: center;
         }
-        .final-score {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin: 20px 0;
-    transition: color 0.3s ease;
-}
 
-.final-percentage {
-    font-size: 1.5rem;
-    margin-bottom: 30px;
-    transition: color 0.3s ease;
-}
-
-.score-divider {
-    color: var(--gray);
-    margin: 0 5px;
-}
-
-.score-10 {
-    font-size: 0.9em;
-}
-
-.score-animation {
-    animation: pulse 0.5s ease;
-}
-
-        
         /* Ajustes para mobile */
         @media (max-width: 768px) {
                .header-buttons {
@@ -136,22 +134,15 @@
                 max-width: 95%;
                 padding: 15px;
             }
-            
+
             .image-popup-img {
                 max-height: 70vh;
             }
-            
+
             .image-placeholder {
                 padding: 20px;
             }
         }
-
-    
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
 
         /* Estilos para o feedback */
         .feedback-mistake-option.correct {
@@ -162,7 +153,7 @@
             margin: 5px 0;
             border-radius: 5px;
         }
-        
+
         .feedback-mistake-option.incorrect {
             background-color: rgba(231, 76, 60, 0.2);
             border-left: 4px solid #c0392b;
@@ -171,20 +162,19 @@
             margin: 5px 0;
             border-radius: 5px;
         }
-        
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Página do Quiz -->
         <div id="quizPage">
-<div class="header">
+            <div class="header">
     <h1>Treino de Questões</h1>
-    <div class="header-actions">
+    <div class="header-buttons">
         <button class="dark-mode-toggle" id="darkModeToggle">
             <span>Modo Escuro</span>
         </button>
-        <a href="index.html" class="action-button">Página Principal</a>
+        <a href="index.html" class="home-button">Página Principal</a>
     </div>
 </div>
 
@@ -258,7 +248,8 @@
 
             <div class="actions">
     <button class="action-button" id="restartButton">Resolver mais questões</button>
-<a href="index.html" class="action-button" style="text-decoration: none;">Página Principal</a>
+    <button class="action-button" id="reviewButton">Revisão das Questões</button>
+    <a href="index.html" class="action-button home-button">Página Principal</a>
 </div>
         </div>
     </div>
@@ -274,22 +265,22 @@
                 <span class="feedback-incorrect" id="feedbackIncorrect">2</span> incorretas.
             </div>
             <div class="feedback-percentage" id="feedbackPercentage">60% de acerto</div>
-            
+
             <div class="feedback-mistakes" id="feedbackMistakes">
                 <!-- Erros serão inseridos aqui -->
             </div>
-            
+
             <button class="feedback-continue" id="feedbackContinue">Continuar</button>
         </div>
     </div>
 
     <!-- Popup de Imagem -->
-<div class="image-popup" id="imagePopup">
-    <div class="image-popup-content">
-        <button class="image-popup-close" id="imagePopupClose" onclick="closeImagePopup()">&times;</button>
-        <img id="popupImage" class="image-popup-img" src="" alt="Imagem ampliada da questão">
+    <div class="image-popup" id="imagePopup">
+        <div class="image-popup-content">
+            <button class="image-popup-close" id="imagePopupClose">&times;</button>
+            <img id="popupImage" class="image-popup-img" src="" alt="Imagem ampliada da questão">
+        </div>
     </div>
-</div>
 
     <script>
         // Configuração do PDF.js
@@ -316,14 +307,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Carregar questões
             currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
-            
+
             // Inicializar array de respostas e tempos
             userAnswers = new Array(currentTestQuestions.length).fill(null);
             testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
-            
+
             // Configurar eventos
             setupEventListeners();
-            
+
             // Mostrar primeira questão
             showQuestion(currentQuestionIndex);
             updateProgressBar();
@@ -339,104 +330,92 @@
             document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
             document.getElementById('feedbackContinue').addEventListener('click', closeFeedback);
             document.getElementById('imagePopupClose').addEventListener('click', closeImagePopup);
-            document.getElementById('feedbackPopup').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeFeedback();
-        }
-    });
-    
-    // Impedir que o clique no conteúdo feche o popup
-    document.querySelector('.feedback-content').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-}
         }
 
-function showQuestion(index) {
-    if (index < 0 || index >= currentTestQuestions.length) return;
-    
-    // Registrar tempo da questão anterior
-    if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
-        const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
-        testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
-    }
-    
-    currentQuestionIndex = index;
-    testStatistics.startTime = Date.now();
-    
-    const question = currentTestQuestions[index];
-    const questionContainer = document.getElementById('questionContainer');
-    
-    let html = `
-        <div class="question-container" id="currentQuestion">
-            <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
-            <div class="question-text">${question.enunciado}</div>
-    `;
-    
-    if (question.imagem) {
-        html += `
-            <div class="image-box">
-                <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                    <span>Clique para visualizar a imagem da questão</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    html += `<div class="options">`;
-    
-    // Adicionar alternativas
-    const alternatives = Object.entries(question.alternativas);
-    alternatives.forEach(([key, value], i) => {
-        const isChecked = userAnswers[index] === key ? 'checked' : '';
-        html += `
-            <label class="option">
-                <input type="radio" name="answer" value="${key}" ${isChecked}>
-                <span class="option-text">${key.toUpperCase()}) ${value}</span>
-            </label>
-        `;
-    });
-    
-    html += `</div></div>`;
-    
-    questionContainer.innerHTML = html;
-    
-    // Configurar eventos das opções
-    document.querySelectorAll('input[name="answer"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            userAnswers[index] = this.value;
-            saveAnswer(index, this.value);
-            
-            // Verificar se devemos mostrar feedback após responder a questão
-            if ((index + 1) % questionsPerFeedback === 0) {
+        function showQuestion(index) {
+            if (index < 0 || index >= currentTestQuestions.length) return;
+
+            // Registrar tempo da questão anterior
+            if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
+                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
+                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
+            }
+
+            currentQuestionIndex = index;
+            testStatistics.startTime = Date.now();
+
+            const question = currentTestQuestions[index];
+            const questionContainer = document.getElementById('questionContainer');
+
+            let html = `
+                <div class="question-container" id="currentQuestion">
+                    <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
+                    <div class="question-text">${question.enunciado}</div>
+            `;
+
+            if (question.imagem) {
+                html += `
+                    <div class="image-box">
+                        <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
+                            <span>Clique para visualizar a imagem da questão</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `<div class="options">`;
+
+            // Adicionar alternativas
+            for (const [key, value] of Object.entries(question.alternativas)) {
+                const isChecked = userAnswers[index] === key ? 'checked' : '';
+                html += `
+                    <label class="option">
+                        <input type="radio" name="answer" value="${key}" ${isChecked}>
+                        <span class="option-text">${key.toUpperCase()}) ${value}</span>
+                    </label>
+                `;
+            }
+
+            html += `</div></div>`;
+
+            questionContainer.innerHTML = html;
+
+            // Configurar eventos das opções
+            document.querySelectorAll('input[name="answer"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    userAnswers[index] = this.value;
+                    saveAnswer(index, this.value);
+                });
+            });
+
+            // Atualizar botões de navegação
+            updateNavigationButtons();
+
+            // Verificar se devemos mostrar feedback
+            if ((index + 1) % questionsPerFeedback === 0 && index > 0) {
                 showFeedback(index + 1);
             }
-        });
-    });
-    
-    // Atualizar botões de navegação
-    updateNavigationButtons();
-}
-        
+        }
+
 function showImagePopup(pdfPageSpec) {
     // Extrair o nome do arquivo e número da página
     const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
     const pageNum = parseInt(pageNumber) || 1;
-    
+
     // Configurar o popup
     const popup = document.getElementById('imagePopup');
     const imgElement = document.getElementById('popupImage');
-    
+
     // Mostrar placeholder enquanto carrega
     imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+Q2FycmVnYW5kbyBpbWFnZW0uLi48L3RleHQ+PC9zdmc+';
     popup.classList.add('active');
-    
+
     // URL do PDF no seu repositório GitHub (formato raw)
     const pdfUrl = 'https://raw.githubusercontent.com/inaciomaximo/treino/main/Tutoriam2.pdf';
-    
+
     // Configuração de escala para a renderização
     const scale = 1.5;
-    
+
     // Usar PDF.js para carregar e renderizar a página
     pdfjsLib.getDocument({
         url: pdfUrl,
@@ -450,12 +429,12 @@ function showImagePopup(pdfPageSpec) {
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
         canvas.width = viewport.width;
-        
+
         const renderContext = {
             canvasContext: context,
             viewport: viewport
         };
-        
+
         return page.render(renderContext).promise.then(function() {
             // Converter o canvas para imagem e exibir no popup
             imgElement.src = canvas.toDataURL('image/png');
@@ -466,23 +445,9 @@ function showImagePopup(pdfPageSpec) {
     });
 }
 
-       function closeImagePopup() {
-    const popup = document.getElementById('imagePopup');
-    
-    // Adiciona uma transição suave
-    popup.style.transition = 'all 0.3s ease';
-    popup.style.opacity = '0';
-    popup.style.visibility = 'hidden';
-    
-    // Remove completamente o popup após a animação
-    setTimeout(() => {
-        popup.classList.remove('active');
-        popup.style.transition = '';
-    }, 300);
-    
-    // Para garantir que o evento não propague
-    return false;
-}
+        function closeImagePopup() {
+            document.getElementById('imagePopup').classList.remove('active');
+        }
 
         function updateNavigationButtons() {
             document.getElementById('prevButton').disabled = currentQuestionIndex === 0;
@@ -520,14 +485,14 @@ function showImagePopup(pdfPageSpec) {
                 const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
                 testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
             }
-            
+
             // Calcular resultados
             calculateResults();
-            
+
             // Mostrar página de resultados
             document.getElementById('quizPage').style.display = 'none';
             document.getElementById('resultsPage').style.display = 'block';
-            
+
             // Gerar gráficos
             generateAllCharts();
         }
@@ -535,16 +500,16 @@ function showImagePopup(pdfPageSpec) {
         function calculateResults() {
             testStatistics.correct = [];
             testStatistics.incorrect = [];
-            
+
             for (let i = 0; i < currentTestQuestions.length; i++) {
                 const question = currentTestQuestions[i];
                 const userAnswer = userAnswers[i];
-                
+
                 if (userAnswer === question.correta) {
                     testStatistics.correct.push(i);
                 } else if (userAnswer !== null) {
                     testStatistics.incorrect.push(i);
-                    
+
                     // Registrar erros por questão
                     if (!testStatistics.mistakesByQuestion[i]) {
                         testStatistics.mistakesByQuestion[i] = 0;
@@ -552,7 +517,7 @@ function showImagePopup(pdfPageSpec) {
                     testStatistics.mistakesByQuestion[i]++;
                 }
             }
-            
+
             // Registrar esta tentativa
             const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
             testStatistics.attemptsHistory.push({
@@ -562,9 +527,9 @@ function showImagePopup(pdfPageSpec) {
                 total: currentTestQuestions.length,
                 time: testStatistics.questionTimes.reduce((a, b) => a + b, 0)
             });
-            
+
             testStatistics.attemptsCount++;
-            
+
             // Resetar estatísticas após 20 provas
             if (testStatistics.attemptsCount >= 20) {
                 testStatistics = {
@@ -586,7 +551,7 @@ function showImagePopup(pdfPageSpec) {
             generateDifficultyChart();
             generateTimePerQuestionChart();
             generatePerformanceEvolutionChart();
-            
+
             updateTextResults();
         }
 
@@ -594,11 +559,11 @@ function showImagePopup(pdfPageSpec) {
             const ctx = document.getElementById('performanceChart').getContext('2d');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
             const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            
+
             if (charts.performance) {
                 charts.performance.destroy();
             }
-            
+
             charts.performance = new Chart(ctx, {
                 type: 'pie',
                 data: {
@@ -616,14 +581,14 @@ function showImagePopup(pdfPageSpec) {
         function generateProgressChart() {
             const ctx = document.getElementById('progressChart').getContext('2d');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-            
+
             if (charts.progress) {
                 charts.progress.destroy();
             }
-            
+
             const labels = testStatistics.attemptsHistory.map((_, i) => `Tentativa ${i + 1}`);
             const data = testStatistics.attemptsHistory.map(a => parseFloat(a.score));
-            
+
             charts.progress = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -653,13 +618,13 @@ function showImagePopup(pdfPageSpec) {
         function generateMistakesChart() {
             const ctx = document.getElementById('mistakesChart').getContext('2d');
             const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            
+
             if (charts.mistakes) {
                 charts.mistakes.destroy();
             }
-            
+
             const mistakesData = getTopMistakes();
-            
+
             charts.mistakes = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -697,27 +662,27 @@ function showImagePopup(pdfPageSpec) {
             const labels = [];
             const values = [];
             const questions = [];
-            
+
             const sortedEntries = Object.entries(testStatistics.mistakesByQuestion)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5); // Top 5 questões mais erradas
-            
+
             sortedEntries.forEach(([qIndex, count]) => {
                 labels.push(`Q${parseInt(qIndex) + 1}`);
                 values.push(count);
                 questions.push(parseInt(qIndex));
             });
-            
+
             return { labels, values, questions };
         }
 
         function generateDifficultyChart() {
             const ctx = document.getElementById('difficultyChart').getContext('2d');
-            
+
             if (charts.difficulty) {
                 charts.difficulty.destroy();
             }
-            
+
             // Dados simulados de dificuldade
             charts.difficulty = new Chart(ctx, {
                 type: 'doughnut',
@@ -736,16 +701,16 @@ function showImagePopup(pdfPageSpec) {
         function generateTimePerQuestionChart() {
             const ctx = document.getElementById('timePerQuestionChart').getContext('2d');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-            
+
             if (charts.timePerQuestion) {
                 charts.timePerQuestion.destroy();
             }
-            
+
             const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
             const data = testStatistics.questionTimes.length > 0 ? 
                 testStatistics.questionTimes : 
                 Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 60) + 30);
-            
+
             charts.timePerQuestion = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -770,22 +735,22 @@ function showImagePopup(pdfPageSpec) {
         function generatePerformanceEvolutionChart() {
             const ctx = document.getElementById('performanceEvolutionChart').getContext('2d');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            
+
             if (charts.performanceEvolution) {
                 charts.performanceEvolution.destroy();
             }
-            
+
             const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
             const data = [];
             let correctCount = 0;
-            
+
             for (let i = 0; i < currentTestQuestions.length; i++) {
                 if (userAnswers[i] === currentTestQuestions[i].correta) {
                     correctCount++;
                 }
                 data.push((correctCount / (i + 1)) * 100);
             }
-            
+
             charts.performanceEvolution = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -818,7 +783,7 @@ function showImagePopup(pdfPageSpec) {
 
         function getChartOptions(title, additionalOptions = {}) {
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            
+
             const baseOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -856,7 +821,7 @@ function showImagePopup(pdfPageSpec) {
                     }
                 }
             };
-            
+
             return {
                 ...baseOptions,
                 ...additionalOptions,
@@ -872,165 +837,115 @@ function showImagePopup(pdfPageSpec) {
         }
 
         function updateTextResults() {
-    const correctCount = testStatistics.correct.length;
-    const totalQuestions = currentTestQuestions.length;
-    const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
-    const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
-    const avgTime = (totalTime / totalQuestions).toFixed(1);
-    const score = (correctCount / totalQuestions) * 10;
-    
-    const finalScoreElement = document.getElementById('finalScore');
-    const finalPercentageElement = document.getElementById('finalPercentage');
-    
-    // Formatando a nota para mostrar como "X/Y" (acertos/total) e "X.Y/10"
-    finalScoreElement.innerHTML = `
-        <span>${correctCount}/${totalQuestions}</span>
-        <span class="score-divider"> | </span>
-        <span class="score-10">${score.toFixed(1)}/10</span>
-    `;
-    
-    finalPercentageElement.textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
-    
-    // Aplicar cores conforme a nota
-    if (score < 6) {
-        finalScoreElement.style.color = '#e74c3c'; // Vermelho
-        finalPercentageElement.style.color = '#e74c3c';
-    } else if (score >= 6 && score < 8) {
-        finalScoreElement.style.color = '#f39c12'; // Laranja/amarelo
-        finalPercentageElement.style.color = '#f39c12';
-    } else {
-        finalScoreElement.style.color = '#2ecc71'; // Verde
-        finalPercentageElement.style.color = '#2ecc71';
-    }
-    
-    // Adicionar classe para animação
-    finalScoreElement.classList.add('score-animation');
-    setTimeout(() => {
-        finalScoreElement.classList.remove('score-animation');
-    }, 1000);
-}
+            const correctCount = testStatistics.correct.length;
+            const totalQuestions = currentTestQuestions.length;
+            const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
+            const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
+            const avgTime = (totalTime / totalQuestions).toFixed(1);
+
+            document.getElementById('finalScore').textContent = `${correctCount}/${totalQuestions}`;
+            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
+        }
 
         function showFeedback(completedCount) {
-    // Garantir que não exceda o número total de questões
-    completedCount = Math.min(completedCount, currentTestQuestions.length);
-    
-    const currentAnswers = userAnswers.slice(0, completedCount);
-    const currentQuestions = currentTestQuestions.slice(0, completedCount);
-    
-    let correctCount = 0;
-    const wrongQuestions = [];
-    
-    for (let i = 0; i < completedCount; i++) {
-        if (currentAnswers[i] === currentQuestions[i].correta) {
-            correctCount++;
-        } else if (currentAnswers[i] !== null) {
-            wrongQuestions.push(i);
-        }
-    }
-    
-    // Atualizar estatísticas no popup
-    document.getElementById('feedbackCompleted').textContent = completedCount;
-    document.getElementById('feedbackCorrect').textContent = correctCount;
-    document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
-    
-    const percentage = ((correctCount / completedCount) * 100).toFixed(1);
-    const percentageElement = document.getElementById('feedbackPercentage');
-    percentageElement.textContent = `${percentage}% de acerto`;
-    
-    // Colorir a porcentagem conforme o desempenho
-    if (percentage < 60) {
-        percentageElement.style.color = '#e74c3c'; // Vermelho
-    } else if (percentage >= 60 && percentage < 80) {
-        percentageElement.style.color = '#f39c12'; // Laranja/amarelo
-    } else {
-        percentageElement.style.color = '#2ecc71'; // Verde
-    }
-    
-    const mistakesContainer = document.getElementById('feedbackMistakes');
-    mistakesContainer.innerHTML = '';
-    
-    if (wrongQuestions.length > 0) {
-        mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
-        
-        wrongQuestions.forEach(index => {
-            const question = currentQuestions[index];
-            const userAnswer = currentAnswers[index];
-            
-            let questionHtml = `
-                <div class="feedback-mistake-item">
-                    <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
-            `;
-            
-            if (question.imagem) {
-                questionHtml += `
-                    <div class="image-box">
-                        <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                            <span>Clique para visualizar a imagem da questão</span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            questionHtml += `<div class="feedback-mistake-options">`;
-            
-            // Mostrar todas as alternativas
-            for (const [key, value] of Object.entries(question.alternativas)) {
-                const isUserChoice = userAnswer === key;
-                const isCorrectAnswer = question.correta === key;
-                
-                let optionClass = 'feedback-mistake-option';
-                if (isCorrectAnswer) {
-                    optionClass += ' correct';
-                } else if (isUserChoice) {
-                    optionClass += ' incorrect';
-                }
-                
-                questionHtml += `
-                    <div class="${optionClass}">
-                        ${key.toUpperCase()}) ${value}
-                        ${isCorrectAnswer ? '<span class="correct-tag">(Correta)</span>' : ''}
-                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua resposta)</span>' : ''}
-                    </div>
-                `;
-            }
-            
-            questionHtml += `</div></div>`;
-            mistakesContainer.innerHTML += questionHtml;
-        });
-    } else {
-        mistakesContainer.innerHTML = '<p class="all-correct">🎉 Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
-    }
-    
-    // Mostrar o popup
-    document.getElementById('feedbackPopup').classList.add('active');
-}
+            const currentAnswers = userAnswers.slice(0, completedCount);
+            const currentQuestions = currentTestQuestions.slice(0, completedCount);
 
-function closeFeedback() {
-    const popup = document.getElementById('feedbackPopup');
-    popup.classList.remove('active');
-    
-    // Reativa a interação com a página principal
-    document.getElementById('quizPage').style.pointerEvents = 'auto';
-}
+            let correctCount = 0;
+            const wrongQuestions = [];
+
+            for (let i = 0; i < completedCount; i++) {
+                if (currentAnswers[i] === currentQuestions[i].correta) {
+                    correctCount++;
+                } else if (currentAnswers[i] !== null) {
+                    wrongQuestions.push(i);
+                }
+            }
+
+            document.getElementById('feedbackCompleted').textContent = completedCount;
+            document.getElementById('feedbackCorrect').textContent = correctCount;
+            document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
+            document.getElementById('feedbackPercentage').textContent = 
+                `${((correctCount / completedCount) * 100).toFixed(1)}% de acerto`;
+
+            const mistakesContainer = document.getElementById('feedbackMistakes');
+            mistakesContainer.innerHTML = '';
+
+            if (wrongQuestions.length > 0) {
+                mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
+
+                wrongQuestions.forEach(index => {
+                    const question = currentQuestions[index];
+                    const userAnswer = currentAnswers[index];
+
+                    let questionHtml = `
+                        <div class="feedback-mistake-item">
+                            <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
+                    `;
+
+                    if (question.imagem) {
+                        questionHtml += `
+                            <div class="image-box">
+                                <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
+                                    <span>Clique para visualizar a imagem da questão</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    questionHtml += `<div class="feedback-mistake-options">`;
+
+                    // Mostrar todas as alternativas
+                    for (const [key, value] of Object.entries(question.alternativas)) {
+                        const isUserChoice = userAnswer === key;
+                        const isCorrectAnswer = question.correta === key;
+
+                        let optionClass = 'feedback-mistake-option';
+                        if (isCorrectAnswer) {
+                            optionClass += ' correct';
+                        } else if (isUserChoice) {
+                            optionClass += ' incorrect';
+                        }
+
+                        questionHtml += `
+                            <div class="${optionClass}">
+                                ${key.toUpperCase()}) ${value}
+                            </div>
+                        `;
+                    }
+
+                    questionHtml += `</div></div>`;
+                    mistakesContainer.innerHTML += questionHtml;
+                });
+            } else {
+                mistakesContainer.innerHTML = '<p>Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
+            }
+
+            document.getElementById('feedbackPopup').classList.add('active');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackPopup').classList.remove('active');
+        }
 
         function restartTest() {
             // Voltar para a página do quiz
             document.getElementById('quizPage').style.display = 'block';
             document.getElementById('resultsPage').style.display = 'none';
-            
+
             // Gerar novas questões
             currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
-            
+
             // Resetar respostas e tempos
             userAnswers = new Array(currentTestQuestions.length).fill(null);
             testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
             testStatistics.startTime = null;
-            
+
             // Mostrar primeira questão
             currentQuestionIndex = 0;
             showQuestion(currentQuestionIndex);
             updateProgressBar();
-            
+
             // Destruir gráficos antigos
             Object.values(charts).forEach(chart => {
                 if (chart) chart.destroy();
@@ -1046,7 +961,7 @@ function closeFeedback() {
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
-            
+
             // Recriar gráficos para aplicar as novas cores
             if (document.getElementById('resultsPage').style.display !== 'none') {
                 generateAllCharts();
