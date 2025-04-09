@@ -196,40 +196,36 @@
             }
         }
 
-/* Estilos para o feedback - Versão Corrigida */
+/* Estilos para o feedback */
 .feedback-mistake-option {
     padding: 10px;
     margin: 5px 0;
     border-radius: 5px;
     border-left: 4px solid transparent;
-    background-color: transparent;
 }
 
 .feedback-mistake-option.correct {
-    background-color: var(--correct-light);
-    border-left-color: var(--correct);
-    color: var(--correct) !important; /* Força a cor do texto */
+    background-color: rgba(46, 204, 113, 0.1);
+    border-left-color: #2ecc71;
+    color: #2ecc71;
 }
 
 .feedback-mistake-option.incorrect {
-    background-color: var(--incorrect-light);
-    border-left-color: var(--incorrect);
-    color: var(--incorrect) !important; /* Força a cor do texto */
+    background-color: rgba(231, 76, 60, 0.1);
+    border-left-color: #e74c3c;
+    color: #e74c3c;
 }
 
-/* Tags de identificação */
 .correct-tag {
-    color: var(--correct) !important;
+    color: #2ecc71;
     font-weight: bold;
     margin-left: 8px;
-    font-size: 0.9em;
 }
 
 .incorrect-tag {
-    color: var(--incorrect) !important;
+    color: #e74c3c;
     font-weight: bold;
     margin-left: 8px;
-    font-size: 0.9em;
 }
     </style>
 </head>
@@ -945,7 +941,6 @@ function showImagePopup(pdfPageSpec) {
 }
 
 function showFeedback(completedCount) {
-    // Garantir que não exceda o número total de questões
     completedCount = Math.min(completedCount, currentTestQuestions.length);
     
     const currentAnswers = userAnswers.slice(0, completedCount);
@@ -954,7 +949,6 @@ function showFeedback(completedCount) {
     let correctCount = 0;
     const wrongQuestions = [];
     
-    // Contar acertos e identificar questões erradas
     for (let i = 0; i < completedCount; i++) {
         if (currentAnswers[i] === currentQuestions[i].correta) {
             correctCount++;
@@ -963,24 +957,13 @@ function showFeedback(completedCount) {
         }
     }
     
-    // Atualizar estatísticas no popup
+    // Atualizar estatísticas
     document.getElementById('feedbackCompleted').textContent = completedCount;
     document.getElementById('feedbackCorrect').textContent = correctCount;
     document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
     
-    // Calcular e exibir porcentagem
     const percentage = ((correctCount / completedCount) * 100).toFixed(1);
-    const percentageElement = document.getElementById('feedbackPercentage');
-    percentageElement.textContent = `${percentage}% de acerto`;
-    
-    // Colorir a porcentagem conforme desempenho
-    if (percentage < 60) {
-        percentageElement.className = 'feedback-percentage low-score';
-    } else if (percentage >= 60 && percentage < 80) {
-        percentageElement.className = 'feedback-percentage medium-score';
-    } else {
-        percentageElement.className = 'feedback-percentage high-score';
-    }
+    document.getElementById('feedbackPercentage').textContent = `${percentage}% de acerto`;
     
     const mistakesContainer = document.getElementById('feedbackMistakes');
     mistakesContainer.innerHTML = '';
@@ -997,7 +980,6 @@ function showFeedback(completedCount) {
                     <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
             `;
             
-            // Adicionar imagem se existir
             if (question.imagem) {
                 questionHtml += `
                     <div class="image-box">
@@ -1025,8 +1007,8 @@ function showFeedback(completedCount) {
                 questionHtml += `
                     <div class="${optionClass}">
                         ${key.toUpperCase()}) ${value}
-                        ${isCorrectAnswer ? '<span class="correct-tag">(Resposta Correta)</span>' : ''}
-                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua Resposta)</span>' : ''}
+                        ${isCorrectAnswer ? '<span class="correct-tag">(Correta)</span>' : ''}
+                        ${isUserChoice && !isCorrectAnswer ? '<span class="incorrect-tag">(Sua resposta)</span>' : ''}
                     </div>
                 `;
             }
@@ -1035,10 +1017,9 @@ function showFeedback(completedCount) {
             mistakesContainer.innerHTML += questionHtml;
         });
     } else {
-        mistakesContainer.innerHTML = '<p class="all-correct-message">🎉 Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
+        mistakesContainer.innerHTML = '<p class="all-correct-message">🎉 Todas as questões respondidas até agora estão corretas!</p>';
     }
     
-    // Mostrar o popup
     document.getElementById('feedbackPopup').classList.add('active');
 }
         function closeFeedback() {
