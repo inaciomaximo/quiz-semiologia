@@ -1,990 +1,194 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões para Treino</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <title>Provas >:)</title>
     <style>
-        /* Estilos para a caixa de imagem */
-        .image-box {
-            width: 100%;
-            max-width: 600px;
-            margin: 15px auto;
-            border: 2px solid var(--gray);
-            border-radius: 10px;
-            overflow: hidden;
-            background-color: var(--white);
-            box-shadow: var(--shadow);
+        :root {
+            --primary: #3a86ff;
+            --primary-light: #4cc9f0;
+            --secondary: #3f37c9;
+            --correct: #2ecc71;
+            --correct-light: rgba(46, 204, 113, 0.1);
+            --incorrect: #e74c3c;
+            --incorrect-light: rgba(231, 76, 60, 0.1);
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #adb5bd;
+            --gray-light: #e9ecef;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .image-placeholder {
-            padding: 30px;
-            text-align: center;
-            background-color: var(--gray-light);
+
+        .dark-mode {
+            --primary: #4895ef;
+            --primary-light: #4361ee;
+            --secondary: #4cc9f0;
+            --correct: #27ae60;
+            --correct-light: rgba(39, 174, 96, 0.1);
+            --incorrect: #c0392b;
+            --incorrect-light: rgba(192, 57, 43, 0.1);
+            --light: #1a1a1a;
+            --dark: #f8f9fa;
+            --gray: #495057;
+            --gray-light: #2d2d2d;
+            --white: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
             color: var(--dark);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .dark-mode-toggle {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid var(--gray);
+            border-radius: 25px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.3s ease;
+            font-size: 1rem;
             font-weight: 500;
         }
-        
-        .image-placeholder:hover {
-            background-color: var(--gray);
+
+        .dark-mode-toggle:hover {
+            background: var(--gray);
             color: var(--white);
         }
-        
-        /* Popup de imagem */
-        .image-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+
+        .disciplines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
-        
-        .image-popup.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .image-popup-content {
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-            width: auto;
-            height: auto;
-            background: var(--white);
-            border-radius: var(--border-radius);
-            padding: 20px;
+
+        .discipline-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 25px;
             box-shadow: var(--shadow);
-        }
-        
-        .image-popup-img {
-            max-width: 100%;
-            max-height: 80vh;
-            display: block;
-            margin: 0 auto;
-        }
-        
-        .image-popup-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
             cursor: pointer;
+            border: 2px solid var(--gray-light);
+            height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
-        
-        /* Ajustes para mobile */
-        @media (max-width: 768px) {
-            .image-popup-content {
-                max-width: 95%;
-                padding: 15px;
-            }
-            
-            .image-popup-img {
-                max-height: 70vh;
-            }
-            
-            .image-placeholder {
-                padding: 20px;
-            }
+
+        .discipline-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
         }
-        
-        /* Estilos para o feedback */
-        .feedback-mistake-option.correct {
-            background-color: var(--correct-light);
-            border-left: 4px solid var(--correct);
-            color: var(--correct);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+
+        .discipline-card h2 {
+            color: var(--primary);
+            margin: 0;
         }
-        
-        .feedback-mistake-option.incorrect {
-            background-color: rgba(231, 76, 60, 0.2);
-            border-left: 4px solid #c0392b;
-            color: #c0392b;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: var(--gray);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Página do Quiz -->
-        <div id="quizPage">
-            <div class="header">
-                <h1>Treino de Questões</h1>
-                <button class="dark-mode-toggle" id="darkModeToggle">
-                    <span>Modo Escuro</span>
-                </button>
-            </div>
+        <header>
+            <h1>Provas >:)</h1>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <span id="darkModeIcon">🌙</span>
+                <span>Modo Escuro</span>
+            </button>
+        </header>
 
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
-            <div id="questionContainer">
-                <!-- As questões serão inseridas aqui dinamicamente -->
-            </div>
-
-            <div class="navigation">
-                <button class="nav-button" id="prevButton" disabled>Anterior</button>
-                <button class="nav-button" id="nextButton">Próxima</button>
-                <button class="nav-button" id="submitButton" style="display: none;">Finalizar Prova</button>
-            </div>
-        </div>
-
-        <!-- Página de Resultados -->
-        <div id="resultsPage">
-            <div class="results-header">
-                <h1>Resultados do Teste</h1>
-                <div class="final-score" id="finalScore"></div>
-                <div class="final-percentage" id="finalPercentage"></div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Desempenho Geral</h3>
-                    <div class="chart-container">
-                        <canvas id="performanceChart"></canvas>
-                    </div>
+        <main>
+            <div class="disciplines-grid">
+                <div class="discipline-card" onclick="location.href='semiologia.html'">
+                    <h2>Semiologia</h2>
                 </div>
-                <div class="stat-card">
-                    <h3>Progresso</h3>
-                    <div class="chart-container">
-                        <canvas id="progressChart"></canvas>
-                    </div>
+
+                <div class="discipline-card" onclick="location.href='tutoria.html'">
+                    <h2>Tutoria</h2>
                 </div>
-                <div class="stat-card">
-                    <h3>Questões com Erros</h3>
-                    <div class="chart-container">
-                        <canvas id="mistakesChart"></canvas>
-                    </div>
+
+                <div class="discipline-card" onclick="location.href='morfo.html'">
+                    <h2>Morfo</h2>
                 </div>
-                <div class="stat-card">
-                    <h3>Distribuição de Dificuldade</h3>
-                    <div class="chart-container">
-                        <canvas id="difficultyChart"></canvas>
-                    </div>
+
+                <div class="discipline-card" onclick="location.href='farmaco.html'">
+                    <h2>Farmaco</h2>
+                </div>
+
+                <div class="discipline-card" onclick="location.href='epidemio.html'">
+                    <h2>Epidemio</h2>
+                </div>
+
+                <div class="discipline-card" onclick="location.href='aps.html'">
+                    <h2>APS</h2>
                 </div>
             </div>
+        </main>
 
-            <div class="additional-stats">
-                <h2>Análise Detalhada</h2>
-                <div class="additional-charts">
-                    <div class="stat-card">
-                        <h3>Tempo por Questão</h3>
-                        <div class="chart-container">
-                            <canvas id="timePerQuestionChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Evolução do Desempenho</h3>
-                        <div class="chart-container">
-                            <canvas id="performanceEvolutionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions">
-                <button class="action-button" id="restartButton">Resolver mais questões</button>
-                <button class="action-button" id="reviewButton">Revisão das Questões</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Popup de Feedback -->
-    <div class="feedback-popup" id="feedbackPopup">
-        <div class="feedback-content">
-            <button class="feedback-close" id="feedbackClose">&times;</button>
-            <h2 class="feedback-title">Feedback Parcial</h2>
-            <div class="feedback-stats">
-                Você completou <span id="feedbackCompleted">5</span> questões.
-                <span class="feedback-correct" id="feedbackCorrect">3</span> corretas e 
-                <span class="feedback-incorrect" id="feedbackIncorrect">2</span> incorretas.
-            </div>
-            <div class="feedback-percentage" id="feedbackPercentage">60% de acerto</div>
-            
-            <div class="feedback-mistakes" id="feedbackMistakes">
-                <!-- Erros serão inseridos aqui -->
-            </div>
-            
-            <button class="feedback-continue" id="feedbackContinue">Continuar</button>
-        </div>
-    </div>
-
-    <!-- Popup de Imagem -->
-    <div class="image-popup" id="imagePopup">
-        <div class="image-popup-content">
-            <button class="image-popup-close" id="imagePopupClose">&times;</button>
-            <img id="popupImage" class="image-popup-img" src="" alt="Imagem ampliada da questão">
-        </div>
+        <footer>
+            <p>© 2025 Portal de Provas - Desenvolvido para estudo</p>
+        </footer>
     </div>
 
     <script>
-        // Configuração do PDF.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+        // Elementos DOM
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
 
-        // Variáveis globais
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let testStatistics = {
-            attemptsHistory: [],
-            correct: [],
-            incorrect: [],
-            mistakesByQuestion: {},
-            attemptsCount: 0,
-            startTime: null,
-            questionTimes: []
-        };
-        const charts = {};
-        let currentTestQuestions = [];
-        let totalQuestions = 7;
-        let questionsPerFeedback = 5;
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carregar questões
-            currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
-            
-            // Inicializar array de respostas e tempos
-            userAnswers = new Array(currentTestQuestions.length).fill(null);
-            testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
-            
-            // Configurar eventos
-            setupEventListeners();
-            
-            // Mostrar primeira questão
-            showQuestion(currentQuestionIndex);
-            updateProgressBar();
-        });
-
-        function setupEventListeners() {
-            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
-            document.getElementById('prevButton').addEventListener('click', showPreviousQuestion);
-            document.getElementById('nextButton').addEventListener('click', showNextQuestion);
-            document.getElementById('submitButton').addEventListener('click', finishTest);
-            document.getElementById('restartButton').addEventListener('click', restartTest);
-            document.getElementById('reviewButton').addEventListener('click', reviewQuestions);
-            document.getElementById('feedbackClose').addEventListener('click', closeFeedback);
-            document.getElementById('feedbackContinue').addEventListener('click', closeFeedback);
-            document.getElementById('imagePopupClose').addEventListener('click', closeImagePopup);
-        }
-
-        function showQuestion(index) {
-            if (index < 0 || index >= currentTestQuestions.length) return;
-            
-            // Registrar tempo da questão anterior
-            if (testStatistics.startTime !== null && currentQuestionIndex >= 0) {
-                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
-                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
-            }
-            
-            currentQuestionIndex = index;
-            testStatistics.startTime = Date.now();
-            
-            const question = currentTestQuestions[index];
-            const questionContainer = document.getElementById('questionContainer');
-            
-            let html = `
-                <div class="question-container" id="currentQuestion">
-                    <div class="question-number">Questão ${index + 1} de ${currentTestQuestions.length}</div>
-                    <div class="question-text">${question.enunciado}</div>
-            `;
-            
-            if (question.imagem) {
-                html += `
-                    <div class="image-box">
-                        <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                            <span>Clique para visualizar a imagem da questão</span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += `<div class="options">`;
-            
-            // Adicionar alternativas
-            for (const [key, value] of Object.entries(question.alternativas)) {
-                const isChecked = userAnswers[index] === key ? 'checked' : '';
-                html += `
-                    <label class="option">
-                        <input type="radio" name="answer" value="${key}" ${isChecked}>
-                        <span class="option-text">${key.toUpperCase()}) ${value}</span>
-                    </label>
-                `;
-            }
-            
-            html += `</div></div>`;
-            
-            questionContainer.innerHTML = html;
-            
-            // Configurar eventos das opções
-            document.querySelectorAll('input[name="answer"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    userAnswers[index] = this.value;
-                    saveAnswer(index, this.value);
-                });
-            });
-            
-            // Atualizar botões de navegação
-            updateNavigationButtons();
-            
-            // Verificar se devemos mostrar feedback
-            if ((index + 1) % questionsPerFeedback === 0 && index > 0) {
-                showFeedback(index + 1);
-            }
-        }
-
-        function showImagePopup(pdfPageSpec) {
-            // Extrair o nome do arquivo e número da página
-            const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
-            const pageNum = parseInt(pageNumber) || 1;
-            
-            // Configurar o popup
-            const popup = document.getElementById('imagePopup');
-            const imgElement = document.getElementById('popupImage');
-            
-            // Mostrar placeholder enquanto carrega
-            imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+Q2FycmVnYW5kbyBpbWFnZW0uLi48L3RleHQ+PC9zdmc+';
-            popup.classList.add('active');
-            
-            // Carregar a página do PDF (simulação)
-            setTimeout(() => {
-                // Em uma implementação real, você usaria PDF.js para renderizar a página
-                // Aqui estamos apenas simulando com uma imagem placeholder
-                imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmZmZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwMCI+UHJldmlzdWEgZGEgcMOhZ2luYSAkew            pageNumfSBkbyBQREY8L3RleHQ+PC9zdmc+'.replace('${pageNum}', pageNum);
-            }, 500);
-        }
-
-        function closeImagePopup() {
-            document.getElementById('imagePopup').classList.remove('active');
-        }
-
-        function updateNavigationButtons() {
-            document.getElementById('prevButton').disabled = currentQuestionIndex === 0;
-            document.getElementById('nextButton').disabled = currentQuestionIndex === currentTestQuestions.length - 1;
-            document.getElementById('submitButton').style.display = 
-                (currentQuestionIndex === currentTestQuestions.length - 1 && userAnswers[currentQuestionIndex] !== null) ? 'block' : 'none';
-        }
-
-        function saveAnswer(index, answer) {
-            userAnswers[index] = answer;
-            updateNavigationButtons();
-        }
-
-        function showPreviousQuestion() {
-            if (currentQuestionIndex > 0) {
-                showQuestion(currentQuestionIndex - 1);
-            }
-        }
-
-        function showNextQuestion() {
-            if (currentQuestionIndex < currentTestQuestions.length - 1) {
-                showQuestion(currentQuestionIndex + 1);
-            }
-        }
-
-        function updateProgressBar() {
-            const answeredCount = userAnswers.filter(answer => answer !== null).length;
-            const progress = (answeredCount / currentTestQuestions.length) * 100;
-            document.getElementById('progressBar').style.width = `${progress}%`;
-        }
-
-        function finishTest() {
-            // Registrar tempo da última questão
-            if (testStatistics.startTime !== null) {
-                const timeSpent = (Date.now() - testStatistics.startTime) / 1000;
-                testStatistics.questionTimes[currentQuestionIndex] = timeSpent;
-            }
-            
-            // Calcular resultados
-            calculateResults();
-            
-            // Mostrar página de resultados
-            document.getElementById('quizPage').style.display = 'none';
-            document.getElementById('resultsPage').style.display = 'block';
-            
-            // Gerar gráficos
-            generateAllCharts();
-        }
-
-        function calculateResults() {
-            testStatistics.correct = [];
-            testStatistics.incorrect = [];
-            
-            for (let i = 0; i < currentTestQuestions.length; i++) {
-                const question = currentTestQuestions[i];
-                const userAnswer = userAnswers[i];
-                
-                if (userAnswer === question.correta) {
-                    testStatistics.correct.push(i);
-                } else if (userAnswer !== null) {
-                    testStatistics.incorrect.push(i);
-                    
-                    // Registrar erros por questão
-                    if (!testStatistics.mistakesByQuestion[i]) {
-                        testStatistics.mistakesByQuestion[i] = 0;
-                    }
-                    testStatistics.mistakesByQuestion[i]++;
-                }
-            }
-            
-            // Registrar esta tentativa
-            const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
-            testStatistics.attemptsHistory.push({
-                date: new Date().toISOString(),
-                score: score.toFixed(1),
-                correct: testStatistics.correct.length,
-                total: currentTestQuestions.length,
-                time: testStatistics.questionTimes.reduce((a, b) => a + b, 0)
-            });
-            
-            testStatistics.attemptsCount++;
-            
-            // Resetar estatísticas após 20 provas
-            if (testStatistics.attemptsCount >= 20) {
-                testStatistics = {
-                    attemptsHistory: [],
-                    correct: [],
-                    incorrect: [],
-                    mistakesByQuestion: {},
-                    attemptsCount: 0,
-                    startTime: null,
-                    questionTimes: []
-                };
-            }
-        }
-
-        function generateAllCharts() {
-            generatePerformanceChart();
-            generateProgressChart();
-            generateMistakesChart();
-            generateDifficultyChart();
-            generateTimePerQuestionChart();
-            generatePerformanceEvolutionChart();
-            
-            updateTextResults();
-        }
-
-        function generatePerformanceChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            
-            if (charts.performance) {
-                charts.performance.destroy();
-            }
-            
-            charts.performance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Acertos', 'Erros'],
-                    datasets: [{
-                        data: [testStatistics.correct.length, testStatistics.incorrect.length],
-                        backgroundColor: [correctColor, incorrectColor],
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Desempenho Geral')
-            });
-        }
-
-        function generateProgressChart() {
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-            
-            if (charts.progress) {
-                charts.progress.destroy();
-            }
-            
-            const labels = testStatistics.attemptsHistory.map((_, i) => `Tentativa ${i + 1}`);
-            const data = testStatistics.attemptsHistory.map(a => parseFloat(a.score));
-            
-            charts.progress = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Nota (0-10)',
-                        data: data,
-                        borderColor: primaryColor,
-                        backgroundColor: primaryColor,
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: getChartOptions('Progresso nas Tentativas', {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                })
-            });
-        }
-
-        function generateMistakesChart() {
-            const ctx = document.getElementById('mistakesChart').getContext('2d');
-            const incorrectColor = getComputedStyle(document.body).getPropertyValue('--incorrect');
-            
-            if (charts.mistakes) {
-                charts.mistakes.destroy();
-            }
-            
-            const mistakesData = getTopMistakes();
-            
-            charts.mistakes = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: mistakesData.labels,
-                    datasets: [{
-                        label: 'Vezes errada',
-                        data: mistakesData.values,
-                        backgroundColor: incorrectColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Questões com Mais Erros', {
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                afterLabel: function(context) {
-                                    const qIndex = mistakesData.questions[context.dataIndex];
-                                    const question = currentTestQuestions[qIndex];
-                                    return `Resposta correta: ${question.correta.toUpperCase()}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                })
-            });
-        }
-
-        function getTopMistakes() {
-            const labels = [];
-            const values = [];
-            const questions = [];
-            
-            const sortedEntries = Object.entries(testStatistics.mistakesByQuestion)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5); // Top 5 questões mais erradas
-            
-            sortedEntries.forEach(([qIndex, count]) => {
-                labels.push(`Q${parseInt(qIndex) + 1}`);
-                values.push(count);
-                questions.push(parseInt(qIndex));
-            });
-            
-            return { labels, values, questions };
-        }
-
-        function generateDifficultyChart() {
-            const ctx = document.getElementById('difficultyChart').getContext('2d');
-            
-            if (charts.difficulty) {
-                charts.difficulty.destroy();
-            }
-            
-            // Dados simulados de dificuldade
-            charts.difficulty = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fácil', 'Médio', 'Difícil'],
-                    datasets: [{
-                        data: [3, 2, 2], // Ajuste conforme suas questões
-                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Distribuição de Dificuldade')
-            });
-        }
-
-        function generateTimePerQuestionChart() {
-            const ctx = document.getElementById('timePerQuestionChart').getContext('2d');
-            const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary');
-            
-            if (charts.timePerQuestion) {
-                charts.timePerQuestion.destroy();
-            }
-            
-            const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const data = testStatistics.questionTimes.length > 0 ? 
-                testStatistics.questionTimes : 
-                Array.from({length: currentTestQuestions.length}, () => Math.floor(Math.random() * 60) + 30);
-            
-            charts.timePerQuestion = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Tempo (segundos)',
-                        data: data,
-                        backgroundColor: primaryColor,
-                        borderWidth: 1
-                    }]
-                },
-                options: getChartOptions('Tempo por Questão', {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                })
-            });
-        }
-
-        function generatePerformanceEvolutionChart() {
-            const ctx = document.getElementById('performanceEvolutionChart').getContext('2d');
-            const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
-            
-            if (charts.performanceEvolution) {
-                charts.performanceEvolution.destroy();
-            }
-            
-            const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
-            const data = [];
-            let correctCount = 0;
-            
-            for (let i = 0; i < currentTestQuestions.length; i++) {
-                if (userAnswers[i] === currentTestQuestions[i].correta) {
-                    correctCount++;
-                }
-                data.push((correctCount / (i + 1)) * 100);
-            }
-            
-            charts.performanceEvolution = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Taxa de Acertos (%)',
-                        data: data,
-                        borderColor: correctColor,
-                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
-                    }]
-                },
-                options: getChartOptions('Evolução do Desempenho', {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    }
-                })
-            });
-        }
-
-        function getChartOptions(title, additionalOptions = {}) {
-            const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
-            
-            const baseOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: title,
-                        color: textColor,
-                        font: {
-                            size: 16
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColor
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    },
-                    y: {
-                        ticks: {
-                            color: textColor
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    }
-                }
-            };
-            
-            return {
-                ...baseOptions,
-                ...additionalOptions,
-                plugins: {
-                    ...baseOptions.plugins,
-                    ...(additionalOptions.plugins || {})
-                },
-                scales: {
-                    ...baseOptions.scales,
-                    ...(additionalOptions.scales || {})
-                }
-            };
-        }
-
-        function updateTextResults() {
-            const correctCount = testStatistics.correct.length;
-            const totalQuestions = currentTestQuestions.length;
-            const percentage = ((correctCount / totalQuestions) * 100).toFixed(1);
-            const totalTime = testStatistics.questionTimes.reduce((a, b) => a + b, 0);
-            const avgTime = (totalTime / totalQuestions).toFixed(1);
-            
-            document.getElementById('finalScore').textContent = `${correctCount}/${totalQuestions}`;
-            document.getElementById('finalPercentage').textContent = `${percentage}% de acerto (${avgTime}s por questão)`;
-        }
-
-        function showFeedback(completedCount) {
-            const currentAnswers = userAnswers.slice(0, completedCount);
-            const currentQuestions = currentTestQuestions.slice(0, completedCount);
-            
-            let correctCount = 0;
-            const wrongQuestions = [];
-            
-            for (let i = 0; i < completedCount; i++) {
-                if (currentAnswers[i] === currentQuestions[i].correta) {
-                    correctCount++;
-                } else if (currentAnswers[i] !== null) {
-                    wrongQuestions.push(i);
-                }
-            }
-            
-            document.getElementById('feedbackCompleted').textContent = completedCount;
-            document.getElementById('feedbackCorrect').textContent = correctCount;
-            document.getElementById('feedbackIncorrect').textContent = completedCount - correctCount;
-            document.getElementById('feedbackPercentage').textContent = 
-                `${((correctCount / completedCount) * 100).toFixed(1)}% de acerto`;
-            
-            const mistakesContainer = document.getElementById('feedbackMistakes');
-            mistakesContainer.innerHTML = '';
-            
-            if (wrongQuestions.length > 0) {
-                mistakesContainer.innerHTML = '<h3>Questões Erradas</h3>';
-                
-                wrongQuestions.forEach(index => {
-                    const question = currentQuestions[index];
-                    const userAnswer = currentAnswers[index];
-                    
-                    let questionHtml = `
-                        <div class="feedback-mistake-item">
-                            <div class="feedback-mistake-question">Questão ${index + 1}: ${question.enunciado}</div>
-                    `;
-                    
-                    if (question.imagem) {
-                        questionHtml += `
-                            <div class="image-box">
-                                <div class="image-placeholder" onclick="showImagePopup('${question.imagem}')">
-                                    <span>Clique para visualizar a imagem da questão</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    questionHtml += `<div class="feedback-mistake-options">`;
-                    
-                    // Mostrar todas as alternativas
-                    for (const [key, value] of Object.entries(question.alternativas)) {
-                        const isUserChoice = userAnswer === key;
-                        const isCorrectAnswer = question.correta === key;
-                        
-                        let optionClass = 'feedback-mistake-option';
-                        if (isCorrectAnswer) {
-                            optionClass += ' correct';
-                        } else if (isUserChoice) {
-                            optionClass += ' incorrect';
-                        }
-                        
-                        questionHtml += `
-                            <div class="${optionClass}">
-                                ${key.toUpperCase()}) ${value}
-                            </div>
-                        `;
-                    }
-                    
-                    questionHtml += `</div></div>`;
-                    mistakesContainer.innerHTML += questionHtml;
-                });
-            } else {
-                mistakesContainer.innerHTML = '<p>Todas as questões respondidas até agora estão corretas! Parabéns!</p>';
-            }
-            
-            document.getElementById('feedbackPopup').classList.add('active');
-        }
-
-        function closeFeedback() {
-            document.getElementById('feedbackPopup').classList.remove('active');
-        }
-
-        function restartTest() {
-            // Voltar para a página do quiz
-            document.getElementById('quizPage').style.display = 'block';
-            document.getElementById('resultsPage').style.display = 'none';
-            
-            // Gerar novas questões
-            currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
-            
-            // Resetar respostas e tempos
-            userAnswers = new Array(currentTestQuestions.length).fill(null);
-            testStatistics.questionTimes = new Array(currentTestQuestions.length).fill(0);
-            testStatistics.startTime = null;
-            
-            // Mostrar primeira questão
-            currentQuestionIndex = 0;
-            showQuestion(currentQuestionIndex);
-            updateProgressBar();
-            
-            // Destruir gráficos antigos
-            Object.values(charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
-        }
-
-        function reviewQuestions() {
-            alert("Navegue pelas questões usando os botões 'Anterior' e 'Próxima' para revisar.");
-            document.getElementById('quizPage').style.display = 'block';
-            document.getElementById('resultsPage').style.display = 'none';
-            showQuestion(0);
-        }
-
+        // Alternar modo escuro/claro
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
-            
-            // Recriar gráficos para aplicar as novas cores
-            if (document.getElementById('resultsPage').style.display !== 'none') {
-                generateAllCharts();
-            }
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            darkModeIcon.textContent = isDark ? '☀️' : '🌙';
         }
 
-        // =============================================
-        // BANCO DE QUESTÕES - EDITÁVEL
-        // =============================================
-        const sampleQuestions = [
-            {
-                enunciado: "Na tabela abaixo estão os resultados de exames de 4 pacientes gestantes. Assinale a alternativa que apresenta a correta interpretação quanto ao nivel da glicemia em cada caso.",
-                imagem: "Tutoriam2.pdf#page=1",
-                alternativas: {
-                    a: "Pcte1: Intolerancia a Glicose, pcte 2 glicemia de jejum alterada, pcte 3 normal, pcte 4 Diabetes Mellitus.",
-                    b: "Pcte1: Glicemia de Jejum alterada, pcte 2 Intolerância a glicose, pcte 3 Diabetes Melliitus, pcte 4 Normal.",
-                    c: "Pcte1: Diabetes Mellitus, pcte 2 normal, pcte 3 glicemia de jejum alterada , pcte 4 Normal.",
-                    d: "Pcte1: normal, pcte 2 glicemia de jejum alterada, pcte 3 Intolerância a glicose, pcte 4 Diabetes Mellitus."
-                },
-                correta: "d"
-            },
-            {
-                enunciado: "Com relação ao desenvolvimento das glândulas mamárias no sexo feminino, assinale a alternativa correta:",
-                imagem: null,
-                alternativas: {
-                    a: "Inicia-se no período puberal e só atinge o ápice do seu crescimento e desenvolvimento durante a gestação e amamentação.",
-                    b: "Inicia-se na telarca, período no qual ocorre o crescimento da tumescência areolar como resposta à atividade uterina e ovariana.",
-                    c: "Inicia-se na telarca, período no qual o tecido mamário se desenvolve com o crescimento dos componentes glandulares.",
-                    d: "Inicia-se no período puberal e só atinge o ápice do seu crescimento e desenvolvimento na fase adulta da mulher, sendo gestante ou não."
-                },
-                correta: "a"
-            },
-            {
-                enunciado: "Assinale a alternativa mais correta que indica um fator que pode ser considerado importante para a liberação da ação lactogênica da prolactina.",
-                imagem: null,
-                alternativas: {
-                    a: "A diminuição dos níveis de cortisol livre no plasma, observada no pós-parto, devido ao aumento do nível circulante de globulinas transportadoras de corticóides, cuja síntese é estimulada pelos estrógenos.",
-                    b: "A diminuição da concentração plasmática de estrógenos, observadas durante o parto, ocorre devido ao aumento do nível circulante de globulinas transportadoras de corticoides, cuja síntese é estimulada pelo cortisol livre.",
-                    c: "A elevação dos níveis de cortisol livre no plasma, observada no pós-parto, devido a queda do nível circulante de globulinas transportadoras de corticóides, cuja síntese é estimulada pelos estrógenos.",
-                    d: "A elevação da concentração plasmática de estrógenos, observada no parto, ocorre devido a queda do nível circulante de globulinas transportadoras de corticoides, cuja síntese é estimulada pelos corticosteróides."
-                },
-                correta: "c"
-            },
-            {
-                enunciado: "Sobre a ação da prolactina nos seus receptores mamários, assinale a alternativa mais correta.",
-                imagem: null,
-                alternativas: {
-                    a: "Com o parto e a degutação há aumento abrupto dos níveis de hormônios circulantes produzidos pela placenta.",
-                    b: "Na apojadura ocorre aumento abrupto dos níveis de hormônios circulantes produzidos pela placenta.",
-                    c: "Com o parto e a degutação há queda abrupta dos níveis de hormônios circulantes produzidos pela placenta.",
-                    d: "Na apojadura, que ocorre 3 dias após o trabalho de parto, há diminuição de estrógeno e aumento do hormônio lactogênico placentário."
-                },
-                correta: "c"
-            },
-            {
-                enunciado: "Assinale a alternativa que indica os períodos corretos da gestação onde ocorre, respectivamente: o aumento da produção de prolactina e as mudanças de coloração e pigmentação já evidentes nas aréolas mamárias.",
-                imagem: null,
-                alternativas: {
-                    a: "No 3o trimestre e no 2o trimestre de gestação.",
-                    b: "No 1o trimestre e no 2o trimestre de gestação.",
-                    c: "No 2o trimestre e no 1o trimestre de gestação.",
-                    d: "No 3o trimestre e no 1o trimestre de gestação."
-                },
-                correta: "c"
-            },
-            {
-                enunciado: "Nas várias etapas de vida da mulher, as mamas passam por diversos processos de preparo. Assinale a alternativa correta relacionada à puberdade, em mulheres não gestantes.",
-                imagem: null,
-                alternativas: {
-                    a: "A mamogênese ocorre com a contribuição da prolactina e da progesterona que promovem o crescimento dos ductos galactóforos, enquanto que os estrógenos atuam com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
-                    b: "A mamogênese ocorre com a contribuição dos estrógenos que promovem o crescimento dos ductos galactóforos, enquanto que a prolactina e a progesterona atuam com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
-                    c: "A galactogênese ocorre com a contribuição dos estrógenos e prolactina que promovem o crescimento dos ductos galactóforos, enquanto que a progesterona atua com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar.",
-                    d: "A galactogênese ocorre com a contribuição dos estrógenos e da progesterona que promovem o crescimento dos ductos galactóforos, enquanto que a prolactina atua com o objetivo de promover o desenvolvimento do sistema lóbulo-alveolar."
-                },
-                correta: "c"
-            },
-            {
-                enunciado: "O processo de lactação pode ser dividido em estágios, entre eles o estágio (A) que corresponde ao crescimento e desenvolvimento da glândula mamária, ocorrendo durante todo o período gestacional e o estágio (B) que é a manutenção da lactação já estabelecida e que depende da duração e da frequência do ato de mamar. (A) e (B) correspondem respectivamente aos seguintes estágios da amamentação:",
-                imagem: null,
-                alternativas: {
-                    a: "Mamogênese e lactogênese.",
-                    b: "Lactogênese e lactopoese.",
-                    c: "Lactogênese e ejeção do leite.",
-                    d: "Mamogênese e lactopoese."
-                },
-                correta: "d"
-            }
-        ];
+        // Verificar modo escuro no carregamento
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeIcon.textContent = '☀️';
+        }
+
+        // Event listener para o botão de modo escuro
+        darkModeToggle.addEventListener('click', toggleDarkMode);
     </script>
 </body>
 </html>
