@@ -359,26 +359,53 @@
             }
         }
 
-        function showImagePopup(pdfPageSpec) {
-            // Extrair o nome do arquivo e número da página
-            const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
-            const pageNum = parseInt(pageNumber) || 1;
-            
-            // Configurar o popup
-            const popup = document.getElementById('imagePopup');
-            const imgElement = document.getElementById('popupImage');
-            
-            // Mostrar placeholder enquanto carrega
-            imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+Q2FycmVnYW5kbyBpbWFnZW0uLi48L3RleHQ+PC9zdmc+';
-            popup.classList.add('active');
-            
-            // Carregar a página do PDF (simulação)
-            setTimeout(() => {
-                // Em uma implementação real, você usaria PDF.js para renderizar a página
-                // Aqui estamos apenas simulando com uma imagem placeholder
-                imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmZmZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwMCI+UHJldmlzdWEgZGEgcMOhZ2luYSAkew            pageNumfSBkbyBQREY8L3RleHQ+PC9zdmc+'.replace('${pageNum}', pageNum);
-            }, 500);
-        }
+function showImagePopup(pdfPageSpec) {
+    // Extrair o nome do arquivo e número da página
+    const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
+    const pageNum = parseInt(pageNumber) || 1;
+    
+    // Configurar o popup
+    const popup = document.getElementById('imagePopup');
+    const imgElement = document.getElementById('popupImage');
+    
+    // Mostrar placeholder enquanto carrega
+    imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+Q2FycmVnYW5kbyBpbWFnZW0uLi48L3RleHQ+PC9zdmc+';
+    popup.classList.add('active');
+    
+    // URL do PDF no seu repositório GitHub (formato raw)
+    const pdfUrl = 'https://raw.githubusercontent.com/inaciomaximo/treino/main/Tutoriam2.pdf';
+    
+    // Configuração de escala para a renderização
+    const scale = 1.5;
+    
+    // Usar PDF.js para carregar e renderizar a página
+    pdfjsLib.getDocument({
+        url: pdfUrl,
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/cmaps/',
+        cMapPacked: true
+    }).promise.then(function(pdf) {
+        return pdf.getPage(pageNum);
+    }).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        
+        return page.render(renderContext).promise.then(function() {
+            // Converter o canvas para imagem e exibir no popup
+            imgElement.src = canvas.toDataURL('image/png');
+        });
+    }).catch(function(error) {
+        console.error('Erro ao carregar PDF:', error);
+        imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2YwMCI+RXJybyBhbyBjYXJyZWdhciBvIFBERi4gVmVyaWZpcXVlIGEgVVJMLjwvdGV4dD48L3N2Zz4=';
+    });
+}
 
         function closeImagePopup() {
             document.getElementById('imagePopup').classList.remove('active');
