@@ -194,17 +194,6 @@
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 /* Popup de imagem */
 .image-popup {
     position: fixed;
@@ -226,14 +215,7 @@
     opacity: 1;
     visibility: visible;
 }
-
-
-
-
-
-
-
-
+        
 .image-popup-content {
     position: relative;
     max-width: 90%;
@@ -252,16 +234,6 @@
     display: block;
     margin: 0 auto;
 }
-
-
-
-
-
-
-
-
-
-
 
 .image-popup-close {
     position: absolute;
@@ -491,7 +463,7 @@
         };
         const charts = {};
         let currentTestQuestions = [];
-        let totalQuestions = 7;
+        let totalQuestions = 20;
         let questionsPerFeedback = 5;
 
         // Inicialização
@@ -572,12 +544,6 @@
 
     questionContainer.innerHTML = html;
 
-
-
-
-
-
-
     // Configurar eventos das opções
     document.querySelectorAll('input[name="answer"]').forEach(radio => {
         radio.addEventListener('change', function() {
@@ -594,85 +560,6 @@
     // Atualizar botões de navegação
     updateNavigationButtons();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 function showImagePopup(pdfPageSpec) {
@@ -725,12 +612,6 @@ function showImagePopup(pdfPageSpec) {
 }
 
 
-
-
-
-
-
-
         function closeImagePopup() {
             document.getElementById('imagePopup').classList.remove('active');
         }
@@ -756,23 +637,16 @@ function showImagePopup(pdfPageSpec) {
         function showNextQuestion() {
             if (currentQuestionIndex < currentTestQuestions.length - 1) {
                 showQuestion(currentQuestionIndex + 1);
-
-
-
             }
 
         }
-
 
         function updateProgressBar() {
             const answeredCount = userAnswers.filter(answer => answer !== null).length;
             const progress = (answeredCount / currentTestQuestions.length) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
         }
-
-
-
-
+        
         function finishTest() {
             // Registrar tempo da última questão
             if (testStatistics.startTime !== null) {
@@ -784,24 +658,9 @@ function showImagePopup(pdfPageSpec) {
             calculateResults();
 
 
-
-
-
-
-
-
-
-
-
             // Mostrar página de resultados
             document.getElementById('quizPage').style.display = 'none';
             document.getElementById('resultsPage').style.display = 'block';
-
-
-
-
-
-
 
             // Gerar gráficos
             generateAllCharts();
@@ -810,19 +669,6 @@ function showImagePopup(pdfPageSpec) {
         function calculateResults() {
             testStatistics.correct = [];
             testStatistics.incorrect = [];
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             for (let i = 0; i < currentTestQuestions.length; i++) {
                 const question = currentTestQuestions[i];
@@ -839,25 +685,8 @@ function showImagePopup(pdfPageSpec) {
                     }
                     testStatistics.mistakesByQuestion[i]++;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 }
             }
-
-
-
 
             // Registrar esta tentativa
             const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
@@ -892,7 +721,6 @@ function showImagePopup(pdfPageSpec) {
             generateDifficultyChart();
             generateTimePerQuestionChart();
             generatePerformanceEvolutionChart();
-
             updateTextResults();
         }
 
@@ -1024,50 +852,11 @@ function showImagePopup(pdfPageSpec) {
 
         function generateDifficultyChart() {
             const ctx = document.getElementById('difficultyChart').getContext('2d');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          
             if (charts.difficulty) {
                 charts.difficulty.destroy();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             }
-
-
-
-
+            
             // Dados simulados de dificuldade
             charts.difficulty = new Chart(ctx, {
                 type: 'doughnut',
@@ -1125,28 +914,7 @@ function showImagePopup(pdfPageSpec) {
 
             if (charts.performanceEvolution) {
                 charts.performanceEvolution.destroy();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             }
-
-
-
-
             const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
             const data = [];
             let correctCount = 0;
@@ -1156,17 +924,8 @@ function showImagePopup(pdfPageSpec) {
                     correctCount++;
                 }
                 data.push((correctCount / (i + 1)) * 100);
-
-
-
-
-
-
-
-
-
             }
-
+            
             charts.performanceEvolution = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -1196,16 +955,7 @@ function showImagePopup(pdfPageSpec) {
                 })
             });
         }
-
-
-
-
-
-
-
-
-
-
+        
         function getChartOptions(title, additionalOptions = {}) {
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
 
@@ -1391,30 +1141,6 @@ function showFeedback(completedCount) {
             document.getElementById('quizPage').style.display = 'block';
             document.getElementById('resultsPage').style.display = 'none';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             // Gerar novas questões
             currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
 
@@ -1433,13 +1159,6 @@ function showFeedback(completedCount) {
                 if (chart) chart.destroy();
             });
         }
-
-
-
-
-
-
-
 
 
         function reviewQuestions() {
