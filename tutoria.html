@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
 
-     <style>
+    <style>
 .final-score {
     font-size: 2.5rem;
     font-weight: bold;
@@ -1190,20 +1190,20 @@ function showFeedback(completedCount) {
     const body = document.body;
     const darkModeToggle = document.getElementById('darkModeToggle');
     const darkModeLabel = document.getElementById('darkModeLabel');
-    
+
     body.classList.toggle('dark-mode');
     darkModeToggle.classList.toggle('active');
-    
+
     // Atualizar o texto do label
     if (body.classList.contains('dark-mode')) {
         darkModeLabel.textContent = 'Modo Claro';
     } else {
         darkModeLabel.textContent = 'Modo Escuro';
     }
-    
+
     // Salvar preferência no localStorage
     localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
-    
+
     // Recriar gráficos para aplicar as novas cores
     if (document.getElementById('resultsPage').style.display !== 'none') {
         generateAllCharts();
