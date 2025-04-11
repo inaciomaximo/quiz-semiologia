@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Questões para Treino</title>
@@ -527,6 +524,7 @@
         }
 
         function showQuestion(index) {
+
     if (index < 0 || index >= currentTestQuestions.length) return;
 
     // Registrar tempo da questão anterior
@@ -574,6 +572,12 @@
 
     questionContainer.innerHTML = html;
 
+
+
+
+
+
+
     // Configurar eventos das opções
     document.querySelectorAll('input[name="answer"]').forEach(radio => {
         radio.addEventListener('change', function() {
@@ -591,6 +595,86 @@
     updateNavigationButtons();
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function showImagePopup(pdfPageSpec) {
     // Extrair o nome do arquivo e número da página
     const [pdfPath, pageNumber] = pdfPageSpec.split('#page=');
@@ -599,6 +683,7 @@ function showImagePopup(pdfPageSpec) {
     // Configurar o popup
     const popup = document.getElementById('imagePopup');
     const imgElement = document.getElementById('popupImage');
+
 
     // Mostrar placeholder enquanto carrega
     imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+Q2FycmVnYW5kbyBpbWFnZW0uLi48L3RleHQ+PC9zdmc+';
@@ -639,6 +724,13 @@ function showImagePopup(pdfPageSpec) {
     });
 }
 
+
+
+
+
+
+
+
         function closeImagePopup() {
             document.getElementById('imagePopup').classList.remove('active');
         }
@@ -664,14 +756,22 @@ function showImagePopup(pdfPageSpec) {
         function showNextQuestion() {
             if (currentQuestionIndex < currentTestQuestions.length - 1) {
                 showQuestion(currentQuestionIndex + 1);
+
+
+
             }
+
         }
+
 
         function updateProgressBar() {
             const answeredCount = userAnswers.filter(answer => answer !== null).length;
             const progress = (answeredCount / currentTestQuestions.length) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
         }
+
+
+
 
         function finishTest() {
             // Registrar tempo da última questão
@@ -683,9 +783,25 @@ function showImagePopup(pdfPageSpec) {
             // Calcular resultados
             calculateResults();
 
+
+
+
+
+
+
+
+
+
+
             // Mostrar página de resultados
             document.getElementById('quizPage').style.display = 'none';
             document.getElementById('resultsPage').style.display = 'block';
+
+
+
+
+
+
 
             // Gerar gráficos
             generateAllCharts();
@@ -694,6 +810,19 @@ function showImagePopup(pdfPageSpec) {
         function calculateResults() {
             testStatistics.correct = [];
             testStatistics.incorrect = [];
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             for (let i = 0; i < currentTestQuestions.length; i++) {
                 const question = currentTestQuestions[i];
@@ -709,8 +838,26 @@ function showImagePopup(pdfPageSpec) {
                         testStatistics.mistakesByQuestion[i] = 0;
                     }
                     testStatistics.mistakesByQuestion[i]++;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 }
             }
+
+
+
 
             // Registrar esta tentativa
             const score = (testStatistics.correct.length / currentTestQuestions.length) * 10;
@@ -817,6 +964,9 @@ function showImagePopup(pdfPageSpec) {
                 charts.mistakes.destroy();
             }
 
+
+
+
             const mistakesData = getTopMistakes();
 
             charts.mistakes = new Chart(ctx, {
@@ -861,6 +1011,8 @@ function showImagePopup(pdfPageSpec) {
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5); // Top 5 questões mais erradas
 
+
+
             sortedEntries.forEach(([qIndex, count]) => {
                 labels.push(`Q${parseInt(qIndex) + 1}`);
                 values.push(count);
@@ -873,9 +1025,48 @@ function showImagePopup(pdfPageSpec) {
         function generateDifficultyChart() {
             const ctx = document.getElementById('difficultyChart').getContext('2d');
 
+
+
+
+
+
+
+
+
+
+
+
+
+
             if (charts.difficulty) {
                 charts.difficulty.destroy();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             }
+
+
+
 
             // Dados simulados de dificuldade
             charts.difficulty = new Chart(ctx, {
@@ -926,13 +1117,35 @@ function showImagePopup(pdfPageSpec) {
             });
         }
 
+
+
         function generatePerformanceEvolutionChart() {
             const ctx = document.getElementById('performanceEvolutionChart').getContext('2d');
             const correctColor = getComputedStyle(document.body).getPropertyValue('--correct');
 
             if (charts.performanceEvolution) {
                 charts.performanceEvolution.destroy();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             }
+
+
+
 
             const labels = Array.from({length: currentTestQuestions.length}, (_, i) => `Q${i+1}`);
             const data = [];
@@ -943,6 +1156,15 @@ function showImagePopup(pdfPageSpec) {
                     correctCount++;
                 }
                 data.push((correctCount / (i + 1)) * 100);
+
+
+
+
+
+
+
+
+
             }
 
             charts.performanceEvolution = new Chart(ctx, {
@@ -974,6 +1196,15 @@ function showImagePopup(pdfPageSpec) {
                 })
             });
         }
+
+
+
+
+
+
+
+
+
 
         function getChartOptions(title, additionalOptions = {}) {
             const textColor = getComputedStyle(document.body).getPropertyValue('--dark');
@@ -1160,6 +1391,30 @@ function showFeedback(completedCount) {
             document.getElementById('quizPage').style.display = 'block';
             document.getElementById('resultsPage').style.display = 'none';
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             // Gerar novas questões
             currentTestQuestions = sampleQuestions.slice(0, totalQuestions);
 
@@ -1178,6 +1433,14 @@ function showFeedback(completedCount) {
                 if (chart) chart.destroy();
             });
         }
+
+
+
+
+
+
+
+
 
         function reviewQuestions() {
             alert("Navegue pelas questões usando os botões 'Anterior' e 'Próxima' para revisar.");
